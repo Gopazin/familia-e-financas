@@ -53,12 +53,14 @@ export const useTransactions = () => {
     }
 
     try {
-      const { data, error } = await supabase
+      const insertData = {
+        ...transactionData,
+        family_id: profile.family_id,
+      };
+
+      const { data, error } = await (supabase as any)
         .from('transactions')
-        .insert({
-          ...transactionData,
-          family_id: profile.family_id,
-        })
+        .insert(insertData)
         .select(`
           *,
           family_member:family_members!inner(id, name, role),
@@ -81,7 +83,7 @@ export const useTransactions = () => {
 
   const updateTransaction = async (id: string, updates: Partial<TransactionFormData>) => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('transactions')
         .update(updates)
         .eq('id', id)
@@ -146,7 +148,7 @@ export const useTransactions = () => {
         throw error;
       }
 
-      const summary = data.reduce(
+      const summary = (data || []).reduce(
         (acc, transaction) => {
           if (transaction.type === 'receita') {
             acc.totalReceitas += transaction.amount;
@@ -195,7 +197,7 @@ export const useTransactions = () => {
       // Group by category
       const categoryMap = new Map<string, { name: string; total: number; count: number; color?: string }>();
       
-      data.forEach(transaction => {
+      (data || []).forEach(transaction => {
         const categoryId = transaction.category_id;
         const categoryName = transaction.category?.name || 'Sem categoria';
         const categoryColor = transaction.category?.color;
