@@ -4,9 +4,30 @@ import RecentTransactions from "@/components/dashboard/RecentTransactions";
 import SpendingChart from "@/components/dashboard/SpendingChart";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { PlusCircle, TrendingUp, Users, Sparkles } from "lucide-react";
 
 const Index = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleNewTransaction = () => {
+    navigate("/transacoes");
+  };
+
+  const handleViewReports = () => {
+    navigate("/relatorios");
+  };
+
+  const handleQuickAction = (action: string) => {
+    toast({
+      title: `${action} selecionada`,
+      description: "Você será redirecionado para a página de transações.",
+    });
+    setTimeout(() => navigate("/transacoes"), 1000);
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
@@ -25,11 +46,11 @@ const Index = () => {
               </p>
             </div>
             <div className="flex gap-3">
-              <Button className="gap-2 bg-gradient-primary hover:bg-primary shadow-primary">
+              <Button onClick={handleNewTransaction} className="gap-2 bg-gradient-primary hover:bg-primary shadow-primary">
                 <PlusCircle className="w-4 h-4" />
                 Nova Transação
               </Button>
-              <Button variant="outline" className="gap-2">
+              <Button onClick={handleViewReports} variant="outline" className="gap-2">
                 <TrendingUp className="w-4 h-4" />
                 Relatório
               </Button>
@@ -43,7 +64,7 @@ const Index = () => {
           <Card className="p-6">
             <h3 className="text-lg font-semibold text-foreground mb-4">Ações Rápidas</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button variant="outline" className="h-16 gap-3 justify-start">
+              <Button onClick={() => handleQuickAction("Adicionar Receita")} variant="outline" className="h-16 gap-3 justify-start">
                 <div className="w-8 h-8 rounded-full bg-secondary-light flex items-center justify-center">
                   <PlusCircle className="w-4 h-4 text-secondary-dark" />
                 </div>
@@ -52,7 +73,7 @@ const Index = () => {
                   <p className="text-sm text-muted-foreground">Salário, mesada, extras</p>
                 </div>
               </Button>
-              <Button variant="outline" className="h-16 gap-3 justify-start">
+              <Button onClick={() => handleQuickAction("Registrar Gasto")} variant="outline" className="h-16 gap-3 justify-start">
                 <div className="w-8 h-8 rounded-full bg-primary-light flex items-center justify-center">
                   <PlusCircle className="w-4 h-4 text-primary-dark" />
                 </div>
@@ -61,7 +82,7 @@ const Index = () => {
                   <p className="text-sm text-muted-foreground">Contas, compras, lazer</p>
                 </div>
               </Button>
-              <Button variant="outline" className="h-16 gap-3 justify-start">
+              <Button onClick={() => navigate("/familia")} variant="outline" className="h-16 gap-3 justify-start">
                 <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center">
                   <Users className="w-4 h-4 text-primary" />
                 </div>
@@ -91,7 +112,7 @@ const Index = () => {
                   "A educação financeira é o melhor investimento que uma família pode fazer. 
                   Prepare-se para descobrir dicas e desafios que transformarão sua relação com o dinheiro!"
                 </p>
-                <Button variant="secondary" className="gap-2">
+                <Button onClick={() => navigate("/educacao")} variant="secondary" className="gap-2">
                   Explorar em Breve
                   <Sparkles className="w-4 h-4" />
                 </Button>

@@ -1,6 +1,7 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowUpCircle, ArrowDownCircle, Eye } from "lucide-react";
 
 interface Transaction {
@@ -14,6 +15,14 @@ interface Transaction {
 }
 
 const RecentTransactions = () => {
+  const { toast } = useToast();
+  
+  const handleViewAll = () => {
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: "A visualização completa de transações estará disponível em breve!",
+    });
+  };
   // Mock data - seria substituído por dados reais
   const transactions: Transaction[] = [
     {
@@ -67,7 +76,7 @@ const RecentTransactions = () => {
     <Card className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-lg font-semibold text-foreground">Transações Recentes</h3>
-        <Button variant="outline" size="sm" className="gap-2">
+        <Button onClick={handleViewAll} variant="outline" size="sm" className="gap-2">
           <Eye className="w-4 h-4" />
           Ver Todas
         </Button>

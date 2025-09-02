@@ -2,6 +2,8 @@ import Navigation from "@/components/navigation/Navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { useNavigate } from "react-router-dom";
 import { 
   GraduationCap, 
   Sparkles, 
@@ -15,6 +17,15 @@ import {
 } from "lucide-react";
 
 const Educacao = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleComingSoonFeature = (featureName: string) => {
+    toast({
+      title: `${featureName} em desenvolvimento`,
+      description: "Esta funcionalidade estará disponível em breve. Continue usando o app!",
+    });
+  };
   const features = [
     {
       icon: Target,
@@ -174,11 +185,11 @@ const Educacao = () => {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button size="lg" className="gap-2 bg-gradient-prosperity hover:bg-secondary shadow-success">
+                <Button onClick={() => navigate("/")} size="lg" className="gap-2 bg-gradient-prosperity hover:bg-secondary shadow-success">
                   <Sparkles className="w-5 h-5" />
                   Voltar ao Dashboard
                 </Button>
-                <Button variant="outline" size="lg" className="gap-2">
+                <Button onClick={() => navigate("/transacoes")} variant="outline" size="lg" className="gap-2">
                   <BookOpen className="w-5 h-5" />
                   Explorar Transações
                 </Button>

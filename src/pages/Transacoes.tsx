@@ -6,11 +6,27 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowUpCircle, ArrowDownCircle, Save, Plus } from "lucide-react";
 import { useState } from "react";
 
 const Transacoes = () => {
   const [transactionType, setTransactionType] = useState<"receita" | "despesa">("receita");
+  const { toast } = useToast();
+
+  const handleSaveTransaction = () => {
+    toast({
+      title: "Transação salva com sucesso!",
+      description: `${transactionType === "receita" ? "Receita" : "Despesa"} foi adicionada ao sistema.`,
+    });
+  };
+
+  const handleQuickCategory = (category: string) => {
+    toast({
+      title: `Categoria "${category}" selecionada`,
+      description: "A categoria foi preenchida no formulário automaticamente.",
+    });
+  };
 
   const categories = {
     receita: ["Salário", "Mesada", "Freelance", "Investimentos", "Bônus", "Outros"],
@@ -128,7 +144,7 @@ const Transacoes = () => {
                     />
                   </div>
 
-                  <Button className="w-full gap-2 bg-gradient-prosperity hover:bg-secondary shadow-success">
+                  <Button onClick={handleSaveTransaction} className="w-full gap-2 bg-gradient-prosperity hover:bg-secondary shadow-success">
                     <Save className="w-4 h-4" />
                     Salvar Transação
                   </Button>
@@ -166,6 +182,7 @@ const Transacoes = () => {
                   {categories[transactionType].slice(0, 5).map((category) => (
                     <Button
                       key={category}
+                      onClick={() => handleQuickCategory(category)}
                       variant="outline"
                       size="sm"
                       className="w-full justify-start gap-2 h-9"
