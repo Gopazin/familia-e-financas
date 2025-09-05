@@ -3,6 +3,9 @@ import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Home, 
   PlusCircle, 
@@ -12,12 +15,17 @@ import {
   Settings,
   Menu,
   X,
-  DollarSign
+  DollarSign,
+  LogOut,
+  Crown,
+  Clock,
+  CreditCard
 } from "lucide-react";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut, isSubscribed, subscriptionPlan } = useAuth();
 
   const navigationItems = [
     { href: "/", icon: Home, label: "Dashboard", color: "text-primary" },
@@ -91,6 +99,52 @@ const Navigation = () => {
             );
           })}
         </nav>
+
+        <div className="p-4 border-t space-y-3">
+          {/* Subscription Status */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              {isSubscribed ? (
+                <Badge className="bg-gradient-secondary text-white">
+                  <Crown className="w-3 h-3 mr-1" />
+                  {subscriptionPlan === 'premium' ? 'Premium' : 'Família'}
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-primary border-primary">
+                  <Clock className="w-3 h-3 mr-1" />
+                  Teste Grátis
+                </Badge>
+              )}
+            </div>
+            
+            {!isSubscribed && (
+              <Link to="/pricing">
+                <Button variant="outline" size="sm" className="w-full gap-2">
+                  <CreditCard className="w-4 h-4" />
+                  Fazer Upgrade
+                </Button>
+              </Link>
+            )}
+          </div>
+
+          <Separator />
+
+          {/* User Info & Logout */}
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground truncate">
+              {user?.user_metadata?.full_name || user?.email}
+            </p>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={signOut}
+              className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
+            >
+              <LogOut className="w-4 h-4" />
+              Sair
+            </Button>
+          </div>
+        </div>
       </Card>
 
       {/* Mobile Menu Overlay */}
@@ -117,6 +171,48 @@ const Navigation = () => {
                   </Link>
                 );
               })}
+              
+              <Separator className="my-3" />
+              
+              {/* Mobile Subscription Status */}
+              <div className="space-y-2">
+                {isSubscribed ? (
+                  <div className="flex items-center gap-2 p-2">
+                    <Badge className="bg-gradient-secondary text-white">
+                      <Crown className="w-3 h-3 mr-1" />
+                      {subscriptionPlan === 'premium' ? 'Premium' : 'Família'}
+                    </Badge>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2 p-2">
+                      <Badge variant="outline" className="text-primary border-primary">
+                        <Clock className="w-3 h-3 mr-1" />
+                        Teste Grátis
+                      </Badge>
+                    </div>
+                    <Link to="/pricing" onClick={() => setIsOpen(false)}>
+                      <Button variant="outline" size="sm" className="w-full gap-2">
+                        <CreditCard className="w-4 h-4" />
+                        Fazer Upgrade
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </div>
+
+              <Separator className="my-3" />
+
+              {/* Mobile Logout */}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => { signOut(); setIsOpen(false); }}
+                className="w-full justify-start gap-2 text-muted-foreground hover:text-destructive"
+              >
+                <LogOut className="w-4 h-4" />
+                Sair
+              </Button>
             </nav>
           </Card>
         </div>

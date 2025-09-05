@@ -4,13 +4,16 @@ import RecentTransactions from "@/components/dashboard/RecentTransactions";
 import SpendingChart from "@/components/dashboard/SpendingChart";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
-import { PlusCircle, TrendingUp, Users, Sparkles } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { PlusCircle, TrendingUp, Users, Sparkles, Crown, Clock } from "lucide-react";
 
 const Index = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, isSubscribed, subscriptionPlan } = useAuth();
 
   const handleNewTransaction = () => {
     navigate("/transacoes");
@@ -38,11 +41,25 @@ const Index = () => {
           {/* Header */}
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-prosperity bg-clip-text text-transparent">
-                Dashboard Familiar
-              </h1>
-              <p className="text-muted-foreground mt-1">
-                Acompanhe a saúde financeira da sua família em tempo real
+              <div className="flex items-center gap-3 mb-2">
+                <h1 className="text-3xl font-bold bg-gradient-prosperity bg-clip-text text-transparent">
+                  Dashboard Familiar
+                </h1>
+                {isSubscribed ? (
+                  <Badge className="bg-gradient-secondary text-white">
+                    <Crown className="w-3 h-3 mr-1" />
+                    {subscriptionPlan === 'premium' ? 'Premium' : 'Família'}
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="text-primary border-primary">
+                    <Clock className="w-3 h-3 mr-1" />
+                    Teste Grátis
+                  </Badge>
+                )}
+              </div>
+              <p className="text-muted-foreground">
+                Bem-vindo, {user?.user_metadata?.full_name || user?.email}! 
+                {!isSubscribed && ' Você está no período de teste gratuito.'}
               </p>
             </div>
             <div className="flex gap-3">
