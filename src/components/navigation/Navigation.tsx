@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   Home, 
   PlusCircle, 
@@ -19,13 +20,38 @@ import {
   LogOut,
   Crown,
   Clock,
-  CreditCard
+  CreditCard,
+  Shield
 } from "lucide-react";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const location = useLocation();
   const { user, signOut, isSubscribed, subscriptionPlan } = useAuth();
+
+  useEffect(() => {
+    checkAdminStatus();
+  }, [user]);
+
+  const checkAdminStatus = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+
+      if (data && !error) {
+        setIsAdmin(true);
+      }
+    } catch (error) {
+      setIsAdmin(false);
+    }
+  };
 
   const navigationItems = [
     { href: "/", icon: Home, label: "Dashboard", color: "text-primary" },
@@ -35,6 +61,11 @@ const Navigation = () => {
     { href: "/educacao", icon: GraduationCap, label: "Educação", color: "text-primary" },
     { href: "/configuracoes", icon: Settings, label: "Configurações", color: "text-muted-foreground" },
   ];
+
+  // Add admin item if user is admin
+  if (isAdmin) {
+    navigationItems.push({ href: "/admin", icon: Shield, label: "Administração", color: "text-red-600" });
+  }
 
   const toggleMenu = () => setIsOpen(!isOpen);
 

@@ -31,12 +31,12 @@ interface UserData {
   email: string;
   full_name: string;
   created_at: string;
-  subscriptions: {
-    status: string;
-    plan: string;
-    trial_end: string;
-    current_period_end: string;
-  };
+  subscriptions?: {
+    status: 'trial' | 'active' | 'canceled' | 'expired';
+    plan: 'free' | 'premium' | 'family';
+    trial_end: string | null;
+    current_period_end: string | null;
+  } | null;
 }
 
 interface DashboardStats {
@@ -98,28 +98,40 @@ const Admin = () => {
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
         .select(`
-          *,
-          subscriptions (
-            status,
-            plan,
-            trial_end,
-            current_period_end
-          )
+          id,
+          email,
+          full_name,
+          created_at,
+          user_id
         `)
         .order('created_at', { ascending: false });
 
       if (usersError) throw usersError;
 
-      setUsers(usersData || []);
+      // Fetch subscriptions separately
+      const { data: subscriptionsData } = await supabase
+        .from('subscriptions')
+        .select('user_id, status, plan, trial_end, current_period_end');
+
+      // Merge data
+      const mergedData = usersData?.map(user => {
+        const subscription = subscriptionsData?.find(sub => sub.user_id === user.user_id);
+        return {
+          ...user,
+          subscriptions: subscription || null
+        };
+      }) || [];
+
+      setUsers(mergedData);
 
       // Calculate stats
-      const totalUsers = usersData?.length || 0;
-      const activeSubscriptions = usersData?.filter(u => 
+      const totalUsers = mergedData.length;
+      const activeSubscriptions = mergedData.filter(u => 
         u.subscriptions?.status === 'active'
-      ).length || 0;
-      const trialUsers = usersData?.filter(u => 
+      ).length;
+      const trialUsers = mergedData.filter(u => 
         u.subscriptions?.status === 'trial'
-      ).length || 0;
+      ).length;
 
       setStats({
         totalUsers,
@@ -139,7 +151,7 @@ const Admin = () => {
     }
   };
 
-  const updateUserSubscription = async (userId: string, newStatus: string) => {
+  const updateUserSubscription = async (userId: string, newStatus: 'trial' | 'active' | 'canceled' | 'expired') => {
     try {
       const { error } = await supabase
         .from('subscriptions')
