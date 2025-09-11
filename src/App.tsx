@@ -15,6 +15,7 @@ import Auth from "./pages/Auth";
 import Pricing from "./pages/Pricing";
 import Landing from "./pages/Landing";
 import Admin from "./pages/Admin";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/landing" element={<Landing />} />
             <Route path="/" element={

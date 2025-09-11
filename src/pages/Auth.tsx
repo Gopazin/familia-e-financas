@@ -16,8 +16,9 @@ const Auth = () => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
-  const { signIn, signUp, signInWithGoogle } = useAuth();
+  const { signIn, signUp, signInWithGoogle, resetPassword } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -99,6 +100,25 @@ const Auth = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email) {
+      toast({
+        variant: "destructive",
+        title: "Email obrigatório",
+        description: "Digite seu email para recuperar a senha.",
+      });
+      return;
+    }
+
+    setLoading(true);
+    await resetPassword(email);
+    setLoading(false);
+    setShowForgotPassword(false);
+  };
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -251,15 +271,26 @@ const Auth = () => {
                         className="pl-10"
                         required
                       />
-                    </div>
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-primary hover:bg-primary shadow-primary"
-                    disabled={loading}
-                  >
-                    {loading ? 'Entrando...' : 'Entrar'}
-                  </Button>
+                     </div>
+                   </div>
+                   <div className="flex items-center justify-between">
+                     <Button 
+                       type="submit" 
+                       className="w-full bg-gradient-primary hover:bg-primary shadow-primary"
+                       disabled={loading}
+                     >
+                       {loading ? 'Entrando...' : 'Entrar'}
+                     </Button>
+                   </div>
+                   <div className="text-center">
+                     <button
+                       type="button"
+                       onClick={() => setShowForgotPassword(true)}
+                       className="text-sm text-primary hover:underline"
+                     >
+                       Esqueci minha senha
+                     </button>
+                   </div>
                 </form>
               </TabsContent>
 
@@ -388,18 +419,68 @@ const Auth = () => {
               </div>
             </div>
 
-            {/* Trial Info */}
-            <div className="mt-4 p-4 bg-gradient-success rounded-lg text-white text-center">
-              <p className="font-semibold">🎉 7 dias grátis para novos usuários!</p>
-              <p className="text-sm text-white/90 mt-1">
-                Experimente todas as funcionalidades sem compromisso
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
-  );
+             {/* Trial Info */}
+             <div className="mt-4 p-4 bg-gradient-success rounded-lg text-white text-center">
+               <p className="font-semibold">🎉 7 dias grátis para novos usuários!</p>
+               <p className="text-sm text-white/90 mt-1">
+                 Experimente todas as funcionalidades sem compromisso
+               </p>
+             </div>
+           </CardContent>
+         </Card>
+
+         {/* Forgot Password Modal */}
+         {showForgotPassword && (
+           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+             <Card className="w-full max-w-md bg-white">
+               <CardHeader>
+                 <CardTitle>Recuperar Senha</CardTitle>
+                 <CardDescription>
+                   Digite seu email para receber o link de recuperação
+                 </CardDescription>
+               </CardHeader>
+               <CardContent>
+                 <form onSubmit={handleForgotPassword} className="space-y-4">
+                   <div className="space-y-2">
+                     <Label htmlFor="reset-email">Email</Label>
+                     <div className="relative">
+                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                       <Input
+                         id="reset-email"
+                         type="email"
+                         placeholder="seu@email.com"
+                         value={email}
+                         onChange={(e) => setEmail(e.target.value)}
+                         className="pl-10"
+                         required
+                       />
+                     </div>
+                   </div>
+                   <div className="flex gap-2">
+                     <Button
+                       type="button"
+                       variant="outline"
+                       className="flex-1"
+                       onClick={() => setShowForgotPassword(false)}
+                     >
+                       Cancelar
+                     </Button>
+                     <Button
+                       type="submit"
+                       className="flex-1"
+                       disabled={loading}
+                     >
+                       {loading ? 'Enviando...' : 'Enviar'}
+                     </Button>
+                   </div>
+                 </form>
+               </CardContent>
+             </Card>
+           </div>
+         )}
+       </div>
+     </div>
+   );
 };
 
 export default Auth;
