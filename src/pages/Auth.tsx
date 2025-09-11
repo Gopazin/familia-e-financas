@@ -119,7 +119,6 @@ const Auth = () => {
     setLoading(false);
     setShowForgotPassword(false);
   };
-  };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
