@@ -5,61 +5,41 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { 
-  Users, 
-  DollarSign, 
-  TrendingUp, 
-  Activity, 
   Crown, 
   Shield, 
-  UserX,
   RefreshCw,
-  Search,
-  Calendar,
-  ChartBar,
   Settings,
-  Bell
+  Bell,
+  Users,
+  BarChart3,
+  CreditCard
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface UserData {
-  id: string;
-  email: string;
-  full_name: string;
-  created_at: string;
-  subscriptions?: {
-    status: 'trial' | 'active' | 'canceled' | 'expired';
-    plan: 'free' | 'premium' | 'family';
-    trial_end: string | null;
-    current_period_end: string | null;
-  } | null;
-}
+import FinancialDashboard from '@/components/admin/FinancialDashboard';
+import UserManagement from '@/components/admin/UserManagement';
 
 interface DashboardStats {
   totalUsers: number;
   activeSubscriptions: number;
   monthlyRevenue: number;
   trialUsers: number;
+  conversionRate: number;
+  averageRevenuePerUser: number;
 }
 
 const Admin = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [users, setUsers] = useState<UserData[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     activeSubscriptions: 0,
     monthlyRevenue: 0,
     trialUsers: 0,
+    conversionRate: 0,
+    averageRevenuePerUser: 0,
   });
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // Check if user is admin
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
@@ -94,50 +74,34 @@ const Admin = () => {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // Fetch users with subscriptions
+      // Fetch basic stats
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
-        .select(`
-          id,
-          email,
-          full_name,
-          created_at,
-          user_id
-        `)
-        .order('created_at', { ascending: false });
+        .select('id, created_at, user_id');
 
       if (usersError) throw usersError;
 
-      // Fetch subscriptions separately
       const { data: subscriptionsData } = await supabase
         .from('subscriptions')
-        .select('user_id, status, plan, trial_end, current_period_end');
+        .select('user_id, status, plan');
 
-      // Merge data
-      const mergedData = usersData?.map(user => {
-        const subscription = subscriptionsData?.find(sub => sub.user_id === user.user_id);
-        return {
-          ...user,
-          subscriptions: subscription || null
-        };
-      }) || [];
-
-      setUsers(mergedData);
-
-      // Calculate stats
-      const totalUsers = mergedData.length;
-      const activeSubscriptions = mergedData.filter(u => 
-        u.subscriptions?.status === 'active'
-      ).length;
-      const trialUsers = mergedData.filter(u => 
-        u.subscriptions?.status === 'trial'
-      ).length;
+      const totalUsers = usersData?.length || 0;
+      const activeSubscriptions = subscriptionsData?.filter(s => s.status === 'active').length || 0;
+      const trialUsers = subscriptionsData?.filter(s => s.status === 'trial').length || 0;
+      const premiumUsers = subscriptionsData?.filter(s => s.plan === 'premium' && s.status === 'active').length || 0;
+      const familyUsers = subscriptionsData?.filter(s => s.plan === 'family' && s.status === 'active').length || 0;
+      
+      const monthlyRevenue = (premiumUsers * 29.90) + (familyUsers * 49.90);
+      const conversionRate = totalUsers > 0 ? (activeSubscriptions / totalUsers) * 100 : 0;
+      const averageRevenuePerUser = activeSubscriptions > 0 ? monthlyRevenue / activeSubscriptions : 0;
 
       setStats({
         totalUsers,
         activeSubscriptions,
         trialUsers,
-        monthlyRevenue: activeSubscriptions * 29.99, // Basic calculation
+        monthlyRevenue,
+        conversionRate,
+        averageRevenuePerUser,
       });
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -151,35 +115,6 @@ const Admin = () => {
     }
   };
 
-  const updateUserSubscription = async (userId: string, newStatus: 'trial' | 'active' | 'canceled' | 'expired') => {
-    try {
-      const { error } = await supabase
-        .from('subscriptions')
-        .update({ status: newStatus })
-        .eq('user_id', userId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Sucesso",
-        description: "Status da assinatura atualizado com sucesso.",
-      });
-
-      fetchDashboardData();
-    } catch (error) {
-      console.error('Error updating subscription:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar a assinatura.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const filteredUsers = users.filter(user =>
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.full_name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   if (!user) {
     return (
@@ -227,7 +162,7 @@ const Admin = () => {
       </div>
 
       <div className="container mx-auto px-4 py-8">
-        {/* Stats Cards */}
+        {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -244,192 +179,114 @@ const Admin = () => {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Assinaturas Ativas</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Receita Mensal (MRR)</CardTitle>
+              <CreditCard className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">{stats.activeSubscriptions}</div>
-              <p className="text-xs text-muted-foreground">
-                Usuários com planos pagos
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Receita Mensal</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-secondary">
+              <div className="text-2xl font-bold text-primary">
                 R$ {stats.monthlyRevenue.toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground">
-                Estimativa baseada em assinaturas ativas
+                Receita recorrente mensal
               </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Usuários em Trial</CardTitle>
-              <Activity className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Taxa de Conversão</CardTitle>
+              <BarChart3 className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-accent-foreground">{stats.trialUsers}</div>
+              <div className="text-2xl font-bold text-secondary">
+                {stats.conversionRate.toFixed(1)}%
+              </div>
               <p className="text-xs text-muted-foreground">
-                Usuários experimentando gratuitamente
+                Trial para assinatura paga
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">ARPU</CardTitle>
+              <Users className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                R$ {stats.averageRevenuePerUser.toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Receita média por usuário
               </p>
             </CardContent>
           </Card>
         </div>
 
         {/* Main Content */}
-        <Tabs defaultValue="users" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
+        <Tabs defaultValue="overview" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="users">Usuários</TabsTrigger>
-            <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsTrigger value="financial">Financeiro</TabsTrigger>
             <TabsTrigger value="settings">Configurações</TabsTrigger>
           </TabsList>
 
-          {/* Users Tab */}
-          <TabsContent value="users" className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Gerenciar Usuários</CardTitle>
-                <CardDescription>
-                  Visualize e gerencie todos os usuários da plataforma
-                </CardDescription>
-                <div className="flex items-center space-x-2">
-                  <Search className="w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por email ou nome..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="max-w-sm"
-                  />
-                </div>
-              </CardHeader>
-              <CardContent>
-                {loading ? (
-                  <div className="text-center py-8">
-                    <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4" />
-                    <p>Carregando dados...</p>
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Usuário</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Plano</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Cadastro</TableHead>
-                        <TableHead>Ações</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredUsers.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell className="font-medium">
-                            {user.full_name || 'Nome não informado'}
-                          </TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>
-                            <Badge variant={user.subscriptions?.plan === 'premium' ? 'default' : 'secondary'}>
-                              {user.subscriptions?.plan || 'free'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <Badge 
-                              variant={
-                                user.subscriptions?.status === 'active' ? 'default' :
-                                user.subscriptions?.status === 'trial' ? 'secondary' : 'outline'
-                              }
-                            >
-                              {user.subscriptions?.status || 'inactive'}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            {new Date(user.created_at).toLocaleDateString('pt-BR')}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="outline" size="sm">
-                                    Ativar Premium
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Ativar Premium</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Deseja ativar o plano premium para {user.full_name || user.email}?
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => updateUserSubscription(user.id, 'active')}
-                                    >
-                                      Confirmar
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Analytics Tab */}
-          <TabsContent value="analytics" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Overview Tab */}
+          <TabsContent value="overview" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ChartBar className="w-5 h-5" />
-                    Conversão de Trials
-                  </CardTitle>
+                  <CardTitle>Métricas Principais</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-primary">
-                    {stats.totalUsers > 0 ? 
-                      ((stats.activeSubscriptions / stats.totalUsers) * 100).toFixed(1)
-                      : 0
-                    }%
+                <CardContent className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Assinaturas Ativas</span>
+                    <span className="font-semibold">{stats.activeSubscriptions}</span>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    Taxa de conversão de trial para pago
-                  </p>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Usuários em Trial</span>
+                    <span className="font-semibold">{stats.trialUsers}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">Taxa de Conversão</span>
+                    <Badge variant="secondary">{stats.conversionRate.toFixed(1)}%</Badge>
+                  </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="w-5 h-5" />
-                    Crescimento
-                  </CardTitle>
+                  <CardTitle>Ações Rápidas</CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-secondary">
-                    +{stats.totalUsers}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Total de usuários cadastrados
-                  </p>
+                <CardContent className="space-y-3">
+                  <Button className="w-full justify-start" variant="outline">
+                    <Users className="w-4 h-4 mr-2" />
+                    Ver Novos Usuários
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline">
+                    <CreditCard className="w-4 h-4 mr-2" />
+                    Relatório Financeiro
+                  </Button>
+                  <Button className="w-full justify-start" variant="outline">
+                    <Bell className="w-4 h-4 mr-2" />
+                    Enviar Notificações
+                  </Button>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
+
+          {/* Users Tab */}
+          <TabsContent value="users" className="space-y-6">
+            <UserManagement />
+          </TabsContent>
+
+          {/* Financial Tab */}
+          <TabsContent value="financial" className="space-y-6">
+            <FinancialDashboard />
+          </TabsContent>
+
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
