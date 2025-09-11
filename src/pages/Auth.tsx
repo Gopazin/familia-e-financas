@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { ArrowLeft, Mail, Lock, User, Shield, CheckCircle, AlertCircle } from 'lucide-react';
+import EmailConfirmationHandler from '@/components/auth/EmailConfirmationHandler';
 
 const Auth = () => {
   const [email, setEmail] = useState('');
@@ -17,10 +18,21 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [showResendConfirmation, setShowResendConfirmation] = useState(false);
   const [passwordStrength, setPasswordStrength] = useState({ score: 0, feedback: '' });
-  const { signIn, signUp, signInWithGoogle, resetPassword } = useAuth();
+  const { signIn, signUp, signInWithGoogle, resetPassword, resendConfirmation } = useAuth();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Check if we need to handle email confirmation
+  const token = searchParams.get('token');
+  const type = searchParams.get('type');
+  
+  // If we have confirmation parameters, show the handler
+  if (token && type) {
+    return <EmailConfirmationHandler />;
+  }
 
   // Validação de força da senha
   const validatePassword = (password: string) => {
@@ -75,7 +87,8 @@ const Auth = () => {
           toast({
             variant: "destructive",
             title: "Email não confirmado",
-            description: "Verifique seu email e clique no link de confirmação.",
+            description: "Verifique seu email e clique no link de confirmação. Se não recebeu, use 'Reenviar confirmação'.",
+            duration: 8000,
           });
         } else {
           toast({
@@ -118,6 +131,24 @@ const Auth = () => {
     await resetPassword(email);
     setLoading(false);
     setShowForgotPassword(false);
+  };
+
+  const handleResendConfirmation = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email) {
+      toast({
+        variant: "destructive",
+        title: "Email obrigatório",
+        description: "Digite seu email para reenviar a confirmação.",
+      });
+      return;
+    }
+
+    setLoading(true);
+    await resendConfirmation(email);
+    setLoading(false);
+    setShowResendConfirmation(false);
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
@@ -281,15 +312,23 @@ const Auth = () => {
                        {loading ? 'Entrando...' : 'Entrar'}
                      </Button>
                    </div>
-                   <div className="text-center">
-                     <button
-                       type="button"
-                       onClick={() => setShowForgotPassword(true)}
-                       className="text-sm text-primary hover:underline"
-                     >
-                       Esqueci minha senha
-                     </button>
-                   </div>
+                    <div className="flex justify-center gap-4 text-center text-sm">
+                      <button
+                        type="button"
+                        onClick={() => setShowForgotPassword(true)}
+                        className="text-primary hover:underline"
+                      >
+                        Esqueci minha senha
+                      </button>
+                      <span className="text-muted-foreground">•</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowResendConfirmation(true)}
+                        className="text-primary hover:underline"
+                      >
+                        Reenviar confirmação
+                      </button>
+                    </div>
                 </form>
               </TabsContent>
 
@@ -407,14 +446,17 @@ const Auth = () => {
               </div>
             </div>
             
-            {/* Email Confirmation Notice */}
-            <div className="flex items-center gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-              <Mail className="w-4 h-4 text-blue-600" />
+            {/* Email Confirmation Notice - Melhorado */}
+            <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <Mail className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
               <div className="text-sm">
-                <p className="font-medium text-blue-800">Confirmação por email</p>
-                <p className="text-blue-600">
-                  Após o cadastro, verifique seu email (inclusive spam) para ativar sua conta
-                </p>
+                <p className="font-medium text-blue-800">Confirmação por email obrigatória</p>
+                <div className="text-blue-700 mt-1 space-y-1">
+                  <p>• Verifique seu email (inclusive spam) após o cadastro</p>
+                  <p>• Links de confirmação são válidos por 24 horas</p>
+                  <p>• Use "Reenviar confirmação" se não receber o email</p>
+                  <p>• Problemas? Verifique se digitou o email corretamente</p>
+                </div>
               </div>
             </div>
 
@@ -428,33 +470,33 @@ const Auth = () => {
            </CardContent>
          </Card>
 
-         {/* Forgot Password Modal */}
-         {showForgotPassword && (
-           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-             <Card className="w-full max-w-md bg-white">
-               <CardHeader>
-                 <CardTitle>Recuperar Senha</CardTitle>
-                 <CardDescription>
-                   Digite seu email para receber o link de recuperação
-                 </CardDescription>
-               </CardHeader>
-               <CardContent>
-                 <form onSubmit={handleForgotPassword} className="space-y-4">
-                   <div className="space-y-2">
-                     <Label htmlFor="reset-email">Email</Label>
-                     <div className="relative">
-                       <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                       <Input
-                         id="reset-email"
-                         type="email"
-                         placeholder="seu@email.com"
-                         value={email}
-                         onChange={(e) => setEmail(e.target.value)}
-                         className="pl-10"
-                         required
-                       />
-                     </div>
-                   </div>
+          {/* Forgot Password Modal */}
+          {showForgotPassword && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              <Card className="w-full max-w-md bg-white">
+                <CardHeader>
+                  <CardTitle>Recuperar Senha</CardTitle>
+                  <CardDescription>
+                    Digite seu email para receber o link de recuperação
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleForgotPassword} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="reset-email">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="reset-email"
+                          type="email"
+                          placeholder="seu@email.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="pl-10"
+                          required
+                        />
+                      </div>
+                    </div>
                    <div className="flex gap-2">
                      <Button
                        type="button"
@@ -476,10 +518,74 @@ const Auth = () => {
                </CardContent>
              </Card>
            </div>
-         )}
-       </div>
-     </div>
-   );
+          )}
+
+          {/* Resend Confirmation Modal */}
+          {showResendConfirmation && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+              <Card className="w-full max-w-md bg-white">
+                <CardHeader>
+                  <CardTitle>Reenviar Confirmação</CardTitle>
+                  <CardDescription>
+                    Digite seu email para receber um novo link de confirmação
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <form onSubmit={handleResendConfirmation} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="resend-email">Email</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="resend-email"
+                          type="email"
+                          placeholder="seu@email.com"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          className="pl-10"
+                          required
+                        />
+                      </div>
+                    </div>
+                    
+                    {/* Info sobre expiração */}
+                    <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                      <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-sm">
+                        <p className="font-medium text-amber-800">Sobre links de confirmação:</p>
+                        <ul className="text-amber-700 mt-1 space-y-1">
+                          <li>• Links são válidos por 24 horas</li>
+                          <li>• Verifique também a pasta de spam</li>
+                          <li>• Só é possível reenviar após alguns minutos</li>
+                        </ul>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => setShowResendConfirmation(false)}
+                      >
+                        Cancelar
+                      </Button>
+                      <Button
+                        type="submit"
+                        className="flex-1"
+                        disabled={loading}
+                      >
+                        {loading ? 'Enviando...' : 'Reenviar'}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+        </div>
+      </div>
+    );
 };
 
 export default Auth;

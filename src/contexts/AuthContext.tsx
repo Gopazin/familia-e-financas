@@ -13,6 +13,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
   updatePassword: (newPassword: string) => Promise<{ error: any }>;
+  resendConfirmation: (email: string) => Promise<{ error: any }>;
   isSubscribed: boolean;
   subscriptionPlan: string | null;
   refreshSubscription: () => Promise<void>;
@@ -65,9 +66,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email);
+        
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Handle specific auth events
+        if (event === 'SIGNED_IN') {
+          toast({
+            title: "Login realizado!",
+            description: "Bem-vindo de volta!",
+          });
+        } else if (event === 'USER_UPDATED') {
+          // Check if this is a new signup by looking for email confirmation
+          if (session?.user && !session.user.email_confirmed_at) {
+            console.log('New user signed up, awaiting email confirmation');
+          }
+        } else if (event === 'TOKEN_REFRESHED') {
+          console.log('Token refreshed successfully');
+        } else if (event === 'PASSWORD_RECOVERY') {
+          toast({
+            title: "Link de recuperação válido",
+            description: "Você pode alterar sua senha agora.",
+          });
+        }
 
         // Defer subscription check to avoid deadlock
         if (session?.user) {
@@ -83,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session check:', session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -99,23 +123,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
+    console.log('Attempting sign in for:', email);
+    
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
 
     if (error) {
+      console.error('SignIn error:', error);
+      let errorMessage = error.message;
+      
+      // Melhor tratamento de erros específicos
+      if (error.message.includes('Invalid login credentials')) {
+        errorMessage = 'Email ou senha incorretos. Verifique suas credenciais.';
+      } else if (error.message.includes('Email not confirmed')) {
+        errorMessage = 'Email não confirmado. Verifique seu email e clique no link de confirmação, ou use "Reenviar confirmação".';
+      } else if (error.message.includes('Too many requests')) {
+        errorMessage = 'Muitas tentativas de login. Aguarde alguns minutos antes de tentar novamente.';
+      }
+      
       toast({
         title: "Erro no login",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
-      });
-    } else {
-      toast({
-        title: "Login realizado com sucesso!",
-        description: "Bem-vindo de volta ao Família e Finanças.",
+        duration: 8000,
       });
     }
+    // Não mostrar toast de sucesso aqui pois já é feito no onAuthStateChange
 
     setLoading(false);
     return { error };
@@ -123,7 +158,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (email: string, password: string, fullName?: string) => {
     setLoading(true);
-    const redirectUrl = `${window.location.origin}/`;
+    const redirectUrl = `${window.location.origin}/auth`;
 
     const { error } = await supabase.auth.signUp({
       email,
@@ -135,19 +170,67 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     if (error) {
+      console.error('SignUp error:', error);
+      let errorMessage = error.message;
+      
+      // Melhor tratamento de erros específicos
+      if (error.message.includes('already registered')) {
+        errorMessage = 'Este email já está cadastrado. Tente fazer login ou use "Esqueci minha senha".';
+      } else if (error.message.includes('Invalid email')) {
+        errorMessage = 'Email inválido. Verifique o formato do email.';
+      } else if (error.message.includes('Password should be')) {
+        errorMessage = 'A senha deve ter pelo menos 6 caracteres.';
+      }
+      
       toast({
         title: "Erro no cadastro",
-        description: error.message,
+        description: errorMessage,
         variant: "destructive",
       });
     } else {
       toast({
         title: "Cadastro realizado com sucesso!",
-        description: "Verifique seu email para confirmar a conta.",
+        description: "Verifique seu email para confirmar a conta. O link é válido por 24 horas. Verifique também a pasta de spam.",
+        duration: 10000,
       });
     }
 
     setLoading(false);
+    return { error };
+  };
+
+  const resendConfirmation = async (email: string) => {
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email: email,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth`,
+      },
+    });
+
+    if (error) {
+      console.error('Resend confirmation error:', error);
+      let errorMessage = error.message;
+      
+      if (error.message.includes('already confirmed')) {
+        errorMessage = 'Este email já foi confirmado. Tente fazer login.';
+      } else if (error.message.includes('too many requests')) {
+        errorMessage = 'Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.';
+      }
+      
+      toast({
+        title: "Erro ao reenviar confirmação",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Email de confirmação reenviado!",
+        description: "Verifique seu email (inclusive spam) para o novo link de confirmação.",
+        duration: 8000,
+      });
+    }
+
     return { error };
   };
 
@@ -242,6 +325,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signOut,
     resetPassword,
     updatePassword,
+    resendConfirmation,
     isSubscribed,
     subscriptionPlan,
     refreshSubscription,
