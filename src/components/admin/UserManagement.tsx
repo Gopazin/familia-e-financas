@@ -131,6 +131,32 @@ const UserManagement = () => {
 
   const updateUserRole = async (userId: string, newRole: 'admin' | 'user') => {
     try {
+      // Prevent removing the last admin
+      if (newRole === 'user') {
+        const { data: adminCount } = await supabase
+          .from('user_roles')
+          .select('*', { count: 'exact' })
+          .eq('role', 'admin');
+        
+        if (adminCount && adminCount.length <= 1) {
+          const { data: currentUser } = await supabase
+            .from('user_roles')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('role', 'admin')
+            .single();
+          
+          if (currentUser) {
+            toast({
+              title: "Erro",
+              description: "Não é possível remover o último administrador do sistema.",
+              variant: "destructive",
+            });
+            return;
+          }
+        }
+      }
+
       // First, remove existing role
       await supabase
         .from('user_roles')
@@ -146,7 +172,7 @@ const UserManagement = () => {
 
       toast({
         title: "Sucesso",
-        description: "Papel do usuário atualizado com sucesso.",
+        description: `Usuário ${newRole === 'admin' ? 'promovido a administrador' : 'alterado para usuário comum'} com sucesso.`,
       });
 
       fetchUsers();

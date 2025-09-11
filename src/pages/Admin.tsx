@@ -13,11 +13,13 @@ import {
   Bell,
   Users,
   BarChart3,
-  CreditCard
+  CreditCard,
+  BookOpen
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import FinancialDashboard from '@/components/admin/FinancialDashboard';
 import UserManagement from '@/components/admin/UserManagement';
+import AdminSetupGuide from '@/components/admin/AdminSetupGuide';
 
 interface DashboardStats {
   totalUsers: number;
@@ -225,10 +227,11 @@ const Admin = () => {
 
         {/* Main Content */}
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Visão Geral</TabsTrigger>
             <TabsTrigger value="users">Usuários</TabsTrigger>
             <TabsTrigger value="financial">Financeiro</TabsTrigger>
+            <TabsTrigger value="setup">Guia Admin</TabsTrigger>
             <TabsTrigger value="settings">Configurações</TabsTrigger>
           </TabsList>
 
@@ -287,6 +290,10 @@ const Admin = () => {
             <FinancialDashboard />
           </TabsContent>
 
+          {/* Setup Guide Tab */}
+          <TabsContent value="setup" className="space-y-6">
+            <AdminSetupGuide />
+          </TabsContent>
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
