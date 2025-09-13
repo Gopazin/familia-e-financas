@@ -62,10 +62,7 @@ const Navigation = () => {
     { href: "/configuracoes", icon: Settings, label: "Configurações", color: "text-muted-foreground" },
   ];
 
-  // Add admin item if user is admin
-  if (isAdmin) {
-    navigationItems.push({ href: "/admin", icon: Shield, label: "Administração", color: "text-red-600" });
-  }
+  // Admin access now has its own layout - no need for navigation item
 
   const toggleMenu = () => setIsOpen(!isOpen);
 

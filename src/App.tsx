@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import AdminProtectedRoute from "@/components/auth/AdminProtectedRoute";
+import AdminLayout from "@/layouts/AdminLayout";
 import Index from "./pages/Index";
 import Transacoes from "./pages/Transacoes";
 import Relatorios from "./pages/Relatorios";
@@ -14,9 +16,14 @@ import Configuracoes from "./pages/Configuracoes";
 import Auth from "./pages/Auth";
 import Pricing from "./pages/Pricing";
 import Landing from "./pages/Landing";
-import Admin from "./pages/Admin";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+// Admin Pages
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminUsers from "./pages/admin/Users";
+import AdminFinancial from "./pages/admin/Financial";
+import AdminAudit from "./pages/admin/Audit";
+import AdminSettings from "./pages/admin/Settings";
 
 const queryClient = new QueryClient();
 
@@ -62,11 +69,18 @@ const App = () => (
                 <Configuracoes />
               </ProtectedRoute>
             } />
+            {/* Admin Routes with dedicated layout */}
             <Route path="/admin" element={
-              <ProtectedRoute>
-                <Admin />
-              </ProtectedRoute>
-            } />
+              <AdminProtectedRoute>
+                <AdminLayout />
+              </AdminProtectedRoute>
+            }>
+              <Route index element={<AdminDashboard />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="financial" element={<AdminFinancial />} />
+              <Route path="audit" element={<AdminAudit />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

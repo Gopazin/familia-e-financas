@@ -2,6 +2,7 @@ import Navigation from "@/components/navigation/Navigation";
 import FinancialSummary from "@/components/dashboard/FinancialSummary";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
 import SpendingChart from "@/components/dashboard/SpendingChart";
+import AdminAccessButton from "@/components/admin/AdminAccessButton";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -63,6 +64,7 @@ const Index = () => {
               </p>
             </div>
             <div className="flex gap-3">
+              <AdminAccessButton />
               <Button onClick={handleNewTransaction} className="gap-2 bg-gradient-primary hover:bg-primary shadow-primary">
                 <PlusCircle className="w-4 h-4" />
                 Nova Transação
