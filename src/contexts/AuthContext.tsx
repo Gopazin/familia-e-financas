@@ -17,6 +17,7 @@ interface AuthContextType {
   isSubscribed: boolean;
   subscriptionPlan: string | null;
   refreshSubscription: () => Promise<void>;
+  forceRefreshSubscription: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -132,6 +133,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     );
 
+    // Set up real-time subscription updates listener
+    const subscriptionChannel = supabase
+      .channel('subscription-updates')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'subscriptions'
+        },
+        (payload) => {
+          console.log('📡 [AuthContext] Real-time subscription update:', payload);
+          // Only refresh if it's for the current user
+          if (user && payload.new && (payload.new as any).user_id === user.id) {
+            console.log('🔄 [AuthContext] Auto-refreshing subscription due to real-time update');
+            refreshSubscription();
+          }
+        }
+      )
+      .subscribe();
+
     // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       console.log('Initial session check:', session?.user?.email);
@@ -146,8 +168,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      subscription.unsubscribe();
+      supabase.removeChannel(subscriptionChannel);
+    };
+  }, [user?.id]);
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
@@ -343,6 +368,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
+  // Force refresh function for admin use
+  const forceRefreshSubscription = async () => {
+    console.log('🔄 [AuthContext] Force refreshing subscription...');
+    await refreshSubscription();
+    toast({
+      title: "Assinatura atualizada!",
+      description: "Os dados de assinatura foram atualizados com sucesso.",
+    });
+  };
+
   const value = {
     user,
     session,
@@ -357,6 +392,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isSubscribed,
     subscriptionPlan,
     refreshSubscription,
+    forceRefreshSubscription,
   };
 
   return (

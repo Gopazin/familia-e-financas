@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card";
 import { TrendingUp, TrendingDown, DollarSign, Target } from "lucide-react";
+import { useTransactions } from "@/hooks/useTransactions";
 
 interface SummaryCardProps {
   title: string;
@@ -38,19 +39,20 @@ const SummaryCard = ({ title, amount, icon: Icon, trend, percentage, gradientCla
 );
 
 const FinancialSummary = () => {
-  // Mock data - seria substituído por dados reais
+  const { monthlyStats } = useTransactions();
+
   const summaryData = [
     {
       title: "Saldo Total",
-      amount: 8450.75,
+      amount: monthlyStats.saldo,
       icon: DollarSign,
-      trend: "up" as const,
+      trend: monthlyStats.saldo >= 0 ? "up" as const : "down" as const,
       percentage: 5.2,
       gradientClass: "bg-gradient-prosperity"
     },
     {
       title: "Receitas do Mês",
-      amount: 12500.00,
+      amount: monthlyStats.receitas,
       icon: TrendingUp,
       trend: "up" as const,
       percentage: 3.1,
@@ -58,7 +60,7 @@ const FinancialSummary = () => {
     },
     {
       title: "Gastos do Mês",
-      amount: 4050.25,
+      amount: monthlyStats.despesas,
       icon: TrendingDown,
       trend: "down" as const,
       percentage: 8.3,
@@ -66,7 +68,7 @@ const FinancialSummary = () => {
     },
     {
       title: "Meta de Economia",
-      amount: 2000.00,
+      amount: Math.max(0, monthlyStats.saldo * 0.2),
       icon: Target,
       gradientClass: "bg-gradient-success"
     }
