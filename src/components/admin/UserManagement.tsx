@@ -19,9 +19,12 @@ import {
   RefreshCw,
   MoreVertical,
   Calendar,
-  DollarSign
+  DollarSign,
+  Bug
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import SubscriptionManager from './SubscriptionManager';
+import SubscriptionDebugger from './SubscriptionDebugger';
 
 interface UserData {
   id: string;
@@ -48,6 +51,13 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [planFilter, setPlanFilter] = useState<string>('all');
+  
+  // Subscription Manager state
+  const [subscriptionManagerOpen, setSubscriptionManagerOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+  
+  // Debug mode
+  const [showDebugger, setShowDebugger] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -102,6 +112,11 @@ const UserManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const openSubscriptionManager = (user: UserData) => {
+    setSelectedUser(user);
+    setSubscriptionManagerOpen(true);
   };
 
   const updateUserSubscription = async (userId: string, newStatus: 'trial' | 'active' | 'canceled' | 'expired') => {
@@ -249,8 +264,15 @@ const UserManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header with Actions */}
-      <Card>
+      <Tabs defaultValue="users" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="users">Gestão de Usuários</TabsTrigger>
+          <TabsTrigger value="debug">Debug de Assinaturas</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="users" className="space-y-6">
+          {/* Header with Actions */}
+          <Card>
         <CardHeader>
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -357,56 +379,15 @@ const UserManagement = () => {
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        {/* Subscription Actions */}
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="outline" size="sm">
-                              <DollarSign className="w-4 h-4 mr-1" />
-                              Assinatura
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Gerenciar Assinatura</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Alterar status da assinatura de {user.full_name || user.email}
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <div className="grid grid-cols-2 gap-2">
-                              <Button 
-                                onClick={() => updateUserSubscription(user.user_id, 'active')}
-                                variant="default"
-                                size="sm"
-                              >
-                                Ativar
-                              </Button>
-                              <Button 
-                                onClick={() => updateUserSubscription(user.user_id, 'trial')}
-                                variant="secondary"
-                                size="sm"
-                              >
-                                Trial
-                              </Button>
-                              <Button 
-                                onClick={() => updateUserSubscription(user.user_id, 'canceled')}
-                                variant="destructive"
-                                size="sm"
-                              >
-                                Cancelar
-                              </Button>
-                              <Button 
-                                onClick={() => updateUserSubscription(user.user_id, 'expired')}
-                                variant="outline"
-                                size="sm"
-                              >
-                                Expirar
-                              </Button>
-                            </div>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Fechar</AlertDialogCancel>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        {/* Subscription Actions - New Advanced Manager */}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openSubscriptionManager(user)}
+                        >
+                          <DollarSign className="w-4 h-4 mr-1" />
+                          Assinatura
+                        </Button>
 
                         {/* Role Actions */}
                         <AlertDialog>
@@ -463,6 +444,25 @@ const UserManagement = () => {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="debug">
+          <SubscriptionDebugger />
+        </TabsContent>
+      </Tabs>
+
+      {/* Subscription Manager Dialog */}
+      {selectedUser && (
+        <SubscriptionManager
+          userId={selectedUser.user_id}
+          userName={selectedUser.full_name || ''}
+          userEmail={selectedUser.email}
+          currentSubscription={selectedUser.subscriptions}
+          open={subscriptionManagerOpen}
+          onOpenChange={setSubscriptionManagerOpen}
+          onUpdate={fetchUsers}
+        />
+      )}
     </div>
   );
 };

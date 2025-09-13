@@ -33,6 +33,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
     
     try {
+      console.log('🔄 [AuthContext] Refreshing subscription for user:', user.email);
+      
       const { data, error } = await supabase
         .from('subscriptions')
         .select('status, plan, trial_end, current_period_end')
@@ -40,7 +42,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (error) {
-        console.error('Error fetching subscription:', error);
+        console.error('❌ [AuthContext] Error fetching subscription:', error);
         return;
       }
 
@@ -49,16 +51,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const trialEnd = data.trial_end ? new Date(data.trial_end) : null;
         const periodEnd = data.current_period_end ? new Date(data.current_period_end) : null;
         
-        const hasActiveSubscription = 
-          data.status === 'active' || 
-          (data.status === 'trial' && trialEnd && trialEnd > now) ||
-          (periodEnd && periodEnd > now);
+        console.log('📊 [AuthContext] Subscription data:', {
+          status: data.status,
+          plan: data.plan,
+          trial_end: data.trial_end,
+          current_period_end: data.current_period_end,
+          now: now.toISOString()
+        });
+        
+        // Mesma lógica de verificação com logs detalhados
+        let hasActiveSubscription = false;
+        let accessReason = '';
+        
+        if (data.status === 'active') {
+          hasActiveSubscription = true;
+          accessReason = 'Status "active"';
+        } else if (data.status === 'trial' && trialEnd && trialEnd > now) {
+          hasActiveSubscription = true;
+          accessReason = 'Trial válido';
+        } else if (periodEnd && periodEnd > now) {
+          hasActiveSubscription = true;
+          accessReason = 'Período ativo válido';
+        } else {
+          accessReason = `Status "${data.status}" sem período válido`;
+        }
+
+        console.log(`✅ [AuthContext] Access result: ${hasActiveSubscription ? 'GRANTED' : 'DENIED'} - ${accessReason}`);
 
         setIsSubscribed(hasActiveSubscription);
         setSubscriptionPlan(data.plan);
+      } else {
+        console.log('❌ [AuthContext] No subscription data found');
+        setIsSubscribed(false);
+        setSubscriptionPlan(null);
       }
     } catch (error) {
-      console.error('Error refreshing subscription:', error);
+      console.error('❌ [AuthContext] Error refreshing subscription:', error);
     }
   };
 
