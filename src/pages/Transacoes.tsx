@@ -1,59 +1,59 @@
-import Navigation from "@/components/navigation/Navigation";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
-import { ArrowUpCircle, ArrowDownCircle, Save, Plus, TrendingUp, TrendingDown, Calendar } from "lucide-react";
-import { useState } from "react";
-import { useTransactions, TransactionType } from "@/hooks/useTransactions";
-import { useFamilyMembers } from "@/hooks/useFamilyMembers";
-import { useAuth } from "@/contexts/AuthContext";
+import React, { useState } from 'react';
+import Navigation from '@/components/navigation/Navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useTransactions, TransactionType, CreateTransactionData } from '@/hooks/useTransactions';
+import { useFamilyMembers } from '@/hooks/useFamilyMembers';
+import { useCategories } from '@/hooks/useCategories';
+import { useAuth } from '@/contexts/AuthContext';
+import { TransactionList } from '@/components/transactions/TransactionList';
+import { QuickTransactionForm } from '@/components/transactions/QuickTransactionForm';
+import { CategoryManager } from '@/components/transactions/CategoryManager';
+import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Lightbulb, List, Settings, Zap } from 'lucide-react';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 
 const Transacoes = () => {
-  const [transactionType, setTransactionType] = useState<TransactionType>("income");
-  const [formData, setFormData] = useState({
-    description: "",
-    amount: "",
-    category: "",
-    family_member_id: "",
-    date: new Date().toISOString().split('T')[0],
-    observation: ""
-  });
-  
-  const { toast } = useToast();
-  const { isSubscribed, subscriptionPlan } = useAuth();
-  const { createTransaction, monthlyStats, loading } = useTransactions();
+  const { user, isSubscribed, subscriptionPlan } = useAuth();
+  const { createTransaction, loading, monthlyStats } = useTransactions();
   const { familyMembers } = useFamilyMembers();
+  const { categories, getCategoriesByType } = useCategories();
+  
+  const [currentType, setCurrentType] = useState<TransactionType>('expense');
+  const [formData, setFormData] = useState({
+    description: '',
+    amount: '',
+    category: '',
+    familyMember: '',
+    date: new Date().toISOString().split('T')[0],
+    observation: ''
+  });
 
-  const handleSaveTransaction = async () => {
-    if (!formData.description.trim()) {
-      toast({
-        title: "Campo obrigatório",
-        description: "Por favor, preencha a descrição da transação.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!formData.amount || Number(formData.amount) <= 0) {
-      toast({
-        title: "Valor inválido",
-        description: "Por favor, insira um valor válido maior que zero.",
-        variant: "destructive",
-      });
+  const handleSaveTransaction = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.description || !formData.amount) {
       return;
     }
 
     const success = await createTransaction({
-      type: transactionType,
-      description: formData.description.trim(),
-      amount: Number(formData.amount),
+      type: currentType,
+      description: formData.description,
+      amount: parseFloat(formData.amount),
       category: formData.category || undefined,
-      family_member_id: formData.family_member_id || undefined,
+      family_member_id: formData.familyMember || undefined,
       date: formData.date,
       observation: formData.observation || undefined,
     });
@@ -61,250 +61,305 @@ const Transacoes = () => {
     if (success) {
       // Reset form
       setFormData({
-        description: "",
-        amount: "",
-        category: "",
-        family_member_id: "",
+        description: '',
+        amount: '',
+        category: '',
+        familyMember: '',
         date: new Date().toISOString().split('T')[0],
-        observation: ""
+        observation: ''
       });
     }
   };
 
-  const handleQuickCategory = (category: string) => {
-    setFormData(prev => ({ ...prev, category }));
-    toast({
-      title: `Categoria "${category}" selecionada`,
-      description: "A categoria foi preenchida no formulário automaticamente.",
-    });
-  };
-
-  const categories = {
-    income: ["Salário", "Mesada", "Freelance", "Investimentos", "Bônus", "Rendimentos", "Vendas", "Outros"],
-    expense: ["Alimentação", "Transporte", "Lazer", "Contas Fixas", "Educação", "Saúde", "Compras", "Casa", "Outros"]
-  };
-
   // Check if premium features are available
-  const isPremiumFeature = (feature: string) => {
-    if (!isSubscribed) return true;
-    if (subscriptionPlan === 'free') return true;
-    return false;
+  const isPremiumFeature = () => {
+    return isSubscribed && (subscriptionPlan === 'premium' || subscriptionPlan === 'family');
   };
+
+  // Get categories for current type
+  const availableCategories = getCategoriesByType(currentType);
 
   const getTransactionIcon = (type: TransactionType) => {
-    switch (type) {
-      case 'income': return <ArrowUpCircle className="w-4 h-4" />;
-      case 'expense': return <ArrowDownCircle className="w-4 h-4" />;
-    }
+    return type === 'income' ? TrendingUp : TrendingDown;
   };
 
   const getTransactionColor = (type: TransactionType) => {
-    switch (type) {
-      case 'income': return "bg-gradient-secondary";
-      case 'expense': return "bg-gradient-primary";
-    }
+    return type === 'income' ? 'text-success' : 'text-destructive';
   };
 
   return (
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <div className="lg:ml-64 pt-16 lg:pt-0">
-        <div className="p-6 space-y-8">
-          {/* Header */}
-          <div>
-            <h1 className="text-3xl font-bold bg-gradient-prosperity bg-clip-text text-transparent">
-              Gerenciar Transações
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Registre receitas e despesas de forma rápida e organizada
-            </p>
+      <div className="container mx-auto px-4 py-8">
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground mb-2">Central de Transações</h1>
+              <p className="text-muted-foreground">
+                Coração operacional do seu controle financeiro
+              </p>
+            </div>
+            <QuickTransactionForm />
           </div>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Transaction Form */}
-            <div className="lg:col-span-2">
-              <Card className="p-6">
-                <div className="flex items-center gap-4 mb-6">
-                  <h2 className="text-xl font-semibold">Nova Transação</h2>
-                  <div className="grid grid-cols-2 gap-1 p-1 rounded-lg border border-border bg-muted">
-                    {(["income", "expense"] as TransactionType[]).map((type) => (
+        <Tabs defaultValue="transactions" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="transactions" className="gap-2">
+              <List className="h-4 w-4" />
+              Lista & Filtros
+            </TabsTrigger>
+            <TabsTrigger value="form" className="gap-2">
+              <PlusCircle className="h-4 w-4" />
+              Formulário Completo
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="gap-2">
+              <Settings className="h-4 w-4" />
+              Categorias
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="transactions" className="space-y-6">
+            {/* Monthly Summary */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Receitas</p>
+                      <p className="text-2xl font-bold text-success">
+                        R$ {monthlyStats.receitas.toFixed(2)}
+                      </p>
+                    </div>
+                    <TrendingUp className="h-8 w-8 text-success" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Despesas</p>
+                      <p className="text-2xl font-bold text-destructive">
+                        R$ {monthlyStats.despesas.toFixed(2)}
+                      </p>
+                    </div>
+                    <TrendingDown className="h-8 w-8 text-destructive" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">Saldo</p>
+                      <p className={`text-2xl font-bold ${monthlyStats.saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
+                        R$ {monthlyStats.saldo.toFixed(2)}
+                      </p>
+                    </div>
+                    <DollarSign className="h-8 w-8" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-muted-foreground">% Categorizado</p>
+                      <p className="text-2xl font-bold">85%</p>
+                    </div>
+                    <Lightbulb className="h-8 w-8" />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            <TransactionList />
+          </TabsContent>
+
+          <TabsContent value="form" className="space-y-6">
+            <div className="grid lg:grid-cols-3 gap-6">
+              {/* Main Transaction Form */}
+              <div className="lg:col-span-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <PlusCircle className="h-6 w-6" />
+                      Nova Transação
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {/* Transaction Type Selection */}
+                    <div className="grid grid-cols-2 gap-4">
                       <Button
-                        key={type}
-                        variant={transactionType === type ? "default" : "ghost"}
-                        size="sm"
-                        onClick={() => setTransactionType(type)}
-                        className={`h-10 ${transactionType === type ? getTransactionColor(type) : ""}`}
+                        type="button"
+                        variant={currentType === 'income' ? 'default' : 'outline'}
+                        onClick={() => setCurrentType('income')}
+                        className="h-12 text-base"
                       >
-                        {getTransactionIcon(type)}
-                        <span className="ml-2 capitalize">
-                          {type === 'income' ? 'Receita' : 'Despesa'}
-                        </span>
+                        <TrendingUp className="mr-2 h-5 w-5" />
+                        Receita
                       </Button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Descrição *</Label>
-                      <Input
-                        id="description"
-                        placeholder="Ex: Salário do mês, Supermercado..."
-                        className="h-11"
-                        value={formData.description}
-                        onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="amount">Valor (R$) *</Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        step="0.01"
-                        placeholder="0,00"
-                        className="h-11"
-                        value={formData.amount}
-                        onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label>Categoria</Label>
-                      <Select 
-                        value={formData.category} 
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                      <Button
+                        type="button"
+                        variant={currentType === 'expense' ? 'default' : 'outline'}
+                        onClick={() => setCurrentType('expense')}
+                        className="h-12 text-base"
                       >
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Selecione uma categoria" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories[transactionType].map((category) => (
-                            <SelectItem key={category} value={category}>
-                              {category}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                        <TrendingDown className="mr-2 h-5 w-5" />
+                        Despesa
+                      </Button>
                     </div>
-                    <div className="space-y-2">
-                      <Label>Responsável</Label>
-                      <Select 
-                        value={formData.family_member_id} 
-                        onValueChange={(value) => setFormData(prev => ({ ...prev, family_member_id: value }))}
-                      >
-                        <SelectTrigger className="h-11">
-                          <SelectValue placeholder="Quem fez a transação?" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {familyMembers.map((member) => (
-                            <SelectItem key={member.id} value={member.id}>
-                              {member.name} ({member.role})
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="date">Data</Label>
-                      <div className="relative">
+
+                    <form onSubmit={handleSaveTransaction} className="space-y-6">
+                      {/* Description */}
+                      <div className="space-y-2">
+                        <Label htmlFor="description">Descrição *</Label>
+                        <Input
+                          id="description"
+                          placeholder={`Descreva sua ${currentType === 'income' ? 'receita' : 'despesa'}...`}
+                          value={formData.description}
+                          onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
+                          required
+                        />
+                      </div>
+
+                      {/* Amount */}
+                      <div className="space-y-2">
+                        <Label htmlFor="amount">Valor *</Label>
+                        <Input
+                          id="amount"
+                          type="number"
+                          step="0.01"
+                          placeholder="0,00"
+                          value={formData.amount}
+                          onChange={(e) => setFormData(prev => ({ ...prev, amount: e.target.value }))}
+                          required
+                        />
+                      </div>
+
+                      {/* Category */}
+                      <div className="space-y-2">
+                        <Label htmlFor="category">Categoria</Label>
+                        <Select value={formData.category} onValueChange={(value) => setFormData(prev => ({ ...prev, category: value }))}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Selecione uma categoria" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {availableCategories.map((cat) => (
+                              <SelectItem key={cat.id} value={cat.id}>
+                                <span className="flex items-center gap-2">
+                                  <span>{cat.emoji}</span>
+                                  <span>{cat.name}</span>
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Family Member (if premium) */}
+                      {isPremiumFeature() && familyMembers.length > 0 && (
+                        <div className="space-y-2">
+                          <Label htmlFor="familyMember">Responsável</Label>
+                          <Select value={formData.familyMember} onValueChange={(value) => setFormData(prev => ({ ...prev, familyMember: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Selecione o responsável" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {familyMembers.map((member) => (
+                                <SelectItem key={member.id} value={member.id}>
+                                  {member.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      )}
+
+                      {/* Date */}
+                      <div className="space-y-2">
+                        <Label htmlFor="date">Data</Label>
                         <Input
                           id="date"
                           type="date"
-                          className="h-11"
                           value={formData.date}
                           onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
                         />
-                        <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
                       </div>
+
+                      {/* Observation */}
+                      <div className="space-y-2">
+                        <Label htmlFor="observation">Observação</Label>
+                        <Textarea
+                          id="observation"
+                          placeholder="Informações adicionais (opcional)"
+                          value={formData.observation}
+                          onChange={(e) => setFormData(prev => ({ ...prev, observation: e.target.value }))}
+                          rows={3}
+                        />
+                      </div>
+
+                      {/* Submit Button */}
+                      <Button type="submit" size="lg" className="w-full" disabled={loading}>
+                        {loading ? 'Salvando...' : 'Salvar Transação'}
+                      </Button>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Sidebar */}
+              <div className="space-y-6">
+                {/* Popular Categories */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Categorias Populares</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-1 gap-2">
+                      {availableCategories.filter(cat => cat.is_favorite).slice(0, 6).map((category) => (
+                        <Button
+                          key={category.id}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setFormData(prev => ({ ...prev, category: category.id }))}
+                          className="justify-start h-auto p-3"
+                        >
+                          <span className="mr-2">{category.emoji}</span>
+                          <span className="text-xs">{category.name}</span>
+                        </Button>
+                      ))}
                     </div>
-                  </div>
+                  </CardContent>
+                </Card>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="observation">Observação (opcional)</Label>
-                    <Textarea
-                      id="observation"
-                      placeholder="Adicione detalhes sobre esta transação..."
-                      className="resize-none"
-                      rows={3}
-                      value={formData.observation}
-                      onChange={(e) => setFormData(prev => ({ ...prev, observation: e.target.value }))}
-                    />
-                  </div>
-
-                  <Button 
-                    onClick={handleSaveTransaction} 
-                    className="w-full gap-2 bg-gradient-prosperity hover:bg-secondary shadow-success"
-                    disabled={loading}
-                  >
-                    <Save className="w-4 h-4" />
-                    {loading ? "Salvando..." : "Salvar Transação"}
-                  </Button>
-                </div>
-              </Card>
+                {/* Tip of the Day */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Lightbulb className="h-5 w-5" />
+                      Dica do Dia
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      💡 Use o lançamento rápido para registrar gastos na hora. Depois pode editar diretamente na lista para adicionar mais detalhes.
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
+          </TabsContent>
 
-            {/* Quick Stats & Tips */}
-            <div className="space-y-6">
-              {/* Month Summary */}
-              <Card className="p-6">
-                <h3 className="font-semibold mb-4">Resumo do Mês</h3>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Receitas</span>
-                    <span className="font-semibold text-secondary">
-                      +R$ {monthlyStats.receitas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">Despesas</span>
-                    <span className="font-semibold text-primary">
-                      -R$ {monthlyStats.despesas.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                    </span>
-                  </div>
-                  <div className="border-t pt-2">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium">Saldo</span>
-                      <span className={`font-bold text-lg ${monthlyStats.saldo >= 0 ? 'text-secondary' : 'text-primary'}`}>
-                        R$ {Math.abs(monthlyStats.saldo).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </Card>
-
-              {/* Categories */}
-              <Card className="p-6">
-                <h3 className="font-semibold mb-4">Categorias Populares</h3>
-                <div className="space-y-3">
-                  {categories[transactionType].slice(0, 5).map((category) => (
-                    <Button
-                      key={category}
-                      onClick={() => handleQuickCategory(category)}
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start gap-2 h-9"
-                    >
-                      <Plus className="w-3 h-3" />
-                      {category}
-                    </Button>
-                  ))}
-                </div>
-              </Card>
-
-              {/* Tip */}
-              <Card className="p-6 bg-gradient-prosperity text-white">
-                <h3 className="font-semibold mb-2">💡 Dica do Dia</h3>
-                <p className="text-sm text-white/90">
-                  Registre suas transações diariamente para ter controle total das suas finanças!
-                </p>
-              </Card>
-            </div>
-          </div>
-        </div>
+          <TabsContent value="categories">
+            <CategoryManager />
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
