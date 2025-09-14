@@ -358,6 +358,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_user_subscription: {
+        Args: { required_plan: string; user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "user" | "admin" | "super_admin"
