@@ -21,7 +21,8 @@ import {
   Crown,
   Clock,
   CreditCard,
-  Shield
+  Shield,
+  TrendingUp
 } from "lucide-react";
 
 const Navigation = () => {
@@ -56,6 +57,7 @@ const Navigation = () => {
   const navigationItems = [
     { href: "/", icon: Home, label: "Dashboard", color: "text-primary" },
     { href: "/transacoes", icon: PlusCircle, label: "Transações", color: "text-secondary" },
+    { href: "/patrimonio", icon: TrendingUp, label: "Patrimônio", color: "text-accent" },
     { href: "/relatorios", icon: BarChart3, label: "Relatórios", color: "text-primary" },
     { href: "/familia", icon: Users, label: "Família", color: "text-secondary" },
     { href: "/educacao", icon: GraduationCap, label: "Educação", color: "text-primary" },
