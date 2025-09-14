@@ -41,6 +41,48 @@ export type Database = {
         }
         Relationships: []
       }
+      assets: {
+        Row: {
+          category: string | null
+          created_at: string
+          current_value: number | null
+          depreciation_rate: number | null
+          description: string | null
+          id: string
+          name: string
+          purchase_date: string | null
+          updated_at: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          current_value?: number | null
+          depreciation_rate?: number | null
+          description?: string | null
+          id?: string
+          name: string
+          purchase_date?: string | null
+          updated_at?: string
+          user_id: string
+          value?: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          current_value?: number | null
+          depreciation_rate?: number | null
+          description?: string | null
+          id?: string
+          name?: string
+          purchase_date?: string | null
+          updated_at?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: []
+      }
       categories: {
         Row: {
           color: string
@@ -105,6 +147,54 @@ export type Database = {
           name?: string
           permissions?: string[] | null
           role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      liabilities: {
+        Row: {
+          category: string | null
+          created_at: string
+          creditor: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          interest_rate: number | null
+          monthly_payment: number | null
+          name: string
+          remaining_amount: number
+          total_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          creditor?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          interest_rate?: number | null
+          monthly_payment?: number | null
+          name: string
+          remaining_amount: number
+          total_amount: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          creditor?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          interest_rate?: number | null
+          monthly_payment?: number | null
+          name?: string
+          remaining_amount?: number
+          total_amount?: number
           updated_at?: string
           user_id?: string
         }
@@ -247,6 +337,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      calculate_net_worth: {
+        Args: { target_user_id: string }
+        Returns: {
+          net_worth: number
+          total_assets: number
+          total_liabilities: number
+        }[]
+      }
       get_user_roles: {
         Args: { target_user_id: string }
         Returns: {
@@ -265,7 +363,7 @@ export type Database = {
       app_role: "user" | "admin" | "super_admin"
       subscription_plan: "free" | "premium" | "family"
       subscription_status: "trial" | "active" | "canceled" | "expired"
-      transaction_type: "income" | "expense"
+      transaction_type: "income" | "expense" | "asset" | "liability"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -396,7 +494,7 @@ export const Constants = {
       app_role: ["user", "admin", "super_admin"],
       subscription_plan: ["free", "premium", "family"],
       subscription_status: ["trial", "active", "canceled", "expired"],
-      transaction_type: ["income", "expense"],
+      transaction_type: ["income", "expense", "asset", "liability"],
     },
   },
 } as const

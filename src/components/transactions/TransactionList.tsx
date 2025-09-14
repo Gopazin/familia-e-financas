@@ -22,6 +22,8 @@ import {
 import { useTransactions, Transaction } from '@/hooks/useTransactions';
 import { useCategories } from '@/hooks/useCategories';
 import { useFamilyMembers } from '@/hooks/useFamilyMembers';
+import { useToast } from '@/hooks/use-toast';
+import { BulkActionsBar } from './BulkActionsBar';
 import { Pencil, Check, X, Filter, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -36,6 +38,7 @@ export const TransactionList = () => {
   const { transactions, loading, updateTransaction, deleteTransaction } = useTransactions();
   const { categories } = useCategories();
   const { familyMembers } = useFamilyMembers();
+  const { toast } = useToast();
   
   const [selectedTransactions, setSelectedTransactions] = useState<string[]>([]);
   const [editingTransaction, setEditingTransaction] = useState<EditingTransaction | null>(null);
@@ -146,8 +149,32 @@ export const TransactionList = () => {
   const handleBulkDelete = async () => {
     if (selectedTransactions.length === 0) return;
     
-    for (const transactionId of selectedTransactions) {
-      await deleteTransaction(transactionId);
+    const promises = selectedTransactions.map(id => deleteTransaction(id));
+    const results = await Promise.all(promises);
+    
+    if (results.every(r => r)) {
+      toast({
+        title: "Transações excluídas",
+        description: `${selectedTransactions.length} transações foram removidas.`,
+      });
+    }
+    
+    setSelectedTransactions([]);
+  };
+
+  const handleBulkCategoryUpdate = async (categoryId: string) => {
+    if (selectedTransactions.length === 0) return;
+    
+    const promises = selectedTransactions.map(id => 
+      updateTransaction(id, { category: categoryId })
+    );
+    const results = await Promise.all(promises);
+    
+    if (results.every(r => r)) {
+      toast({
+        title: "Categoria atualizada",
+        description: `${selectedTransactions.length} transações foram atualizadas.`,
+      });
     }
     
     setSelectedTransactions([]);
@@ -452,6 +479,13 @@ export const TransactionList = () => {
           </div>
         )}
       </CardContent>
+
+      <BulkActionsBar
+        selectedCount={selectedTransactions.length}
+        onClearSelection={() => setSelectedTransactions([])}
+        onBulkDelete={handleBulkDelete}
+        onBulkCategoryUpdate={handleBulkCategoryUpdate}
+      />
     </Card>
   );
 };
