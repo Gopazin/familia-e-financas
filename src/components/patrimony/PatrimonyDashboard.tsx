@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TrendingUp, TrendingDown, DollarSign, Building, CreditCard } from 'lucide-react';
 import { useNetWorth } from '@/hooks/useNetWorth';
@@ -13,8 +14,11 @@ import { LiabilityForm } from './LiabilityForm';
 
 export const PatrimonyDashboard = () => {
   const { netWorth, loading: netWorthLoading } = useNetWorth();
-  const { assets } = useAssets();
-  const { liabilities } = useLiabilities();
+  const { assets, loading: assetsLoading } = useAssets();
+  const { liabilities, loading: liabilitiesLoading } = useLiabilities();
+
+  const hasData = assets.length > 0 || liabilities.length > 0;
+  const isLoading = netWorthLoading || assetsLoading || liabilitiesLoading;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('pt-BR', {
@@ -35,8 +39,54 @@ export const PatrimonyDashboard = () => {
     return 'secondary';
   };
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="grid gap-4 md:grid-cols-3">
+          {[1, 2, 3].map((i) => (
+            <Card key={i}>
+              <CardContent className="pt-6">
+                <div className="animate-pulse">
+                  <div className="h-4 bg-muted rounded w-20 mb-2"></div>
+                  <div className="h-8 bg-muted rounded w-32"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      {/* Empty State */}
+      {!hasData && (
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center py-12">
+              <Building className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-foreground mb-2">
+                Comece a construir seu patrimônio
+              </h3>
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Registre seus bens e dívidas para ter uma visão completa da sua situação financeira.
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Button size="lg" className="gap-2">
+                  <Building className="h-4 w-4" />
+                  Adicionar Primeiro Ativo
+                </Button>
+                <Button variant="outline" size="lg" className="gap-2">
+                  <CreditCard className="h-4 w-4" />
+                  Registrar Primeira Dívida
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Resumo do Patrimônio */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>

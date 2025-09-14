@@ -91,88 +91,93 @@ const Transacoes = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
+      <div className="container mx-auto px-4 py-6 max-w-7xl">
+        <div className="mb-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">Central de Transações</h1>
-              <p className="text-muted-foreground">
-                Coração operacional do seu controle financeiro
+              <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">Central de Transações</h1>
+              <p className="text-sm sm:text-base text-muted-foreground">
+                Controle completo das suas finanças
               </p>
             </div>
-            <QuickTransactionForm />
+            <div className="w-full sm:w-auto">
+              <QuickTransactionForm />
+            </div>
           </div>
         </div>
 
-        <Tabs defaultValue="transactions" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="transactions" className="gap-2">
-              <List className="h-4 w-4" />
-              Lista & Filtros
+        <Tabs defaultValue="transactions" className="space-y-4">
+          <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsTrigger value="transactions" className="gap-2 text-xs sm:text-sm py-2 sm:py-3">
+              <List className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Lista & Filtros</span>
+              <span className="sm:hidden">Lista</span>
             </TabsTrigger>
-            <TabsTrigger value="form" className="gap-2">
-              <PlusCircle className="h-4 w-4" />
-              Formulário Completo
+            <TabsTrigger value="form" className="gap-2 text-xs sm:text-sm py-2 sm:py-3">
+              <PlusCircle className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Formulário Completo</span>
+              <span className="sm:hidden">Novo</span>
             </TabsTrigger>
-            <TabsTrigger value="categories" className="gap-2">
-              <Settings className="h-4 w-4" />
-              Categorias
+            <TabsTrigger value="categories" className="gap-2 text-xs sm:text-sm py-2 sm:py-3">
+              <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Categorias</span>
+              <span className="sm:hidden">Config</span>
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="transactions" className="space-y-6">
+          <TabsContent value="transactions" className="space-y-4">
             {/* Monthly Summary */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 sm:pt-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Receitas</p>
-                      <p className="text-2xl font-bold text-success">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Receitas</p>
+                      <p className="text-lg sm:text-2xl font-bold text-success">
                         R$ {monthlyStats.receitas.toFixed(2)}
                       </p>
                     </div>
-                    <TrendingUp className="h-8 w-8 text-success" />
+                    <TrendingUp className="h-6 w-6 sm:h-8 sm:w-8 text-success flex-shrink-0" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 sm:pt-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Despesas</p>
-                      <p className="text-2xl font-bold text-destructive">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Despesas</p>
+                      <p className="text-lg sm:text-2xl font-bold text-destructive">
                         R$ {monthlyStats.despesas.toFixed(2)}
                       </p>
                     </div>
-                    <TrendingDown className="h-8 w-8 text-destructive" />
+                    <TrendingDown className="h-6 w-6 sm:h-8 sm:w-8 text-destructive flex-shrink-0" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 sm:pt-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Saldo</p>
-                      <p className={`text-2xl font-bold ${monthlyStats.saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">Saldo</p>
+                      <p className={`text-lg sm:text-2xl font-bold ${monthlyStats.saldo >= 0 ? 'text-success' : 'text-destructive'}`}>
                         R$ {monthlyStats.saldo.toFixed(2)}
                       </p>
                     </div>
-                    <DollarSign className="h-8 w-8" />
+                    <DollarSign className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0" />
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 sm:pt-6">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">% Categorizado</p>
-                      <p className="text-2xl font-bold">85%</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">% Categorizado</p>
+                      <p className="text-lg sm:text-2xl font-bold">85%</p>
                     </div>
-                    <Lightbulb className="h-8 w-8" />
+                    <Lightbulb className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0" />
                   </div>
                 </CardContent>
               </Card>

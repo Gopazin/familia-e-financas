@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Edit, Trash2, Search } from 'lucide-react';
+import { Edit, Trash2, Search, Building, PlusCircle } from 'lucide-react';
 import { useAssets, Asset } from '@/hooks/useAssets';
 import { AssetForm } from './AssetForm';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -62,7 +62,31 @@ export const AssetsList = () => {
   };
 
   if (loading) {
-    return <div>Carregando ativos...</div>;
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="animate-pulse">
+            <div className="h-12 bg-muted rounded"></div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (assets.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-foreground mb-2">Nenhum ativo cadastrado</h3>
+        <p className="text-muted-foreground mb-4">
+          Comece adicionando seus bens e investimentos para acompanhar seu patrimônio.
+        </p>
+        <Button variant="outline" size="sm">
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Adicionar Primeiro Ativo
+        </Button>
+      </div>
+    );
   }
 
   return (
