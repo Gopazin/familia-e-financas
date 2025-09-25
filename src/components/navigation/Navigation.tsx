@@ -22,7 +22,8 @@ import {
   Clock,
   CreditCard,
   Shield,
-  TrendingUp
+  TrendingUp,
+  Bot
 } from "lucide-react";
 
 const Navigation = () => {
@@ -57,6 +58,7 @@ const Navigation = () => {
   const navigationItems = [
     { href: "/", icon: Home, label: "Dashboard", color: "text-primary" },
     { href: "/transacoes", icon: PlusCircle, label: "Transações", color: "text-secondary" },
+    { href: "/transacoes-ai", icon: Bot, label: "IA Financeiro", color: "text-accent", premium: true },
     { href: "/patrimonio", icon: TrendingUp, label: "Patrimônio", color: "text-accent" },
     { href: "/relatorios", icon: BarChart3, label: "Relatórios", color: "text-primary" },
     { href: "/familia", icon: Users, label: "Família", color: "text-secondary" },
@@ -111,19 +113,25 @@ const Navigation = () => {
         <nav className="flex-1 p-4 space-y-2">
           {navigationItems.map((item) => {
             const isActive = location.pathname === item.href;
+            const isPremiumFeature = item.premium && !isSubscribed;
+            
             return (
               <Link key={item.href} to={item.href}>
                 <Button
                   variant={isActive ? "default" : "ghost"}
                   className={cn(
                     "w-full justify-start gap-3 h-12 transition-smooth",
-                    isActive && "bg-gradient-primary text-white shadow-primary"
+                    isActive && "bg-gradient-primary text-white shadow-primary",
+                    isPremiumFeature && "opacity-60"
                   )}
                 >
                   <item.icon className={cn("w-5 h-5", isActive ? "text-white" : item.color)} />
                   <span className={cn("font-medium", isActive ? "text-white" : "text-foreground")}>
                     {item.label}
                   </span>
+                  {item.premium && (
+                    <Crown className="w-3 h-3 ml-auto text-amber-500" />
+                  )}
                 </Button>
               </Link>
             );
@@ -184,19 +192,25 @@ const Navigation = () => {
             <nav className="p-4 space-y-2">
               {navigationItems.map((item) => {
                 const isActive = location.pathname === item.href;
+                const isPremiumFeature = item.premium && !isSubscribed;
+                
                 return (
                   <Link key={item.href} to={item.href} onClick={() => setIsOpen(false)}>
                     <Button
                       variant={isActive ? "default" : "ghost"}
                       className={cn(
                         "w-full justify-start gap-3 h-12 transition-smooth",
-                        isActive && "bg-gradient-primary text-white shadow-primary"
+                        isActive && "bg-gradient-primary text-white shadow-primary",
+                        isPremiumFeature && "opacity-60"
                       )}
                     >
                       <item.icon className={cn("w-5 h-5", isActive ? "text-white" : item.color)} />
                       <span className={cn("font-medium", isActive ? "text-white" : "text-foreground")}>
                         {item.label}
                       </span>
+                      {item.premium && (
+                        <Crown className="w-3 h-3 ml-auto text-amber-500" />
+                      )}
                     </Button>
                   </Link>
                 );

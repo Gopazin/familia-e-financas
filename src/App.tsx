@@ -9,6 +9,8 @@ import AdminProtectedRoute from "@/components/auth/AdminProtectedRoute";
 import AdminLayout from "@/layouts/AdminLayout";
 import Index from "./pages/Index";
 import Transacoes from "./pages/Transacoes";
+import TransacoesAI from "./pages/TransacoesAI";
+import Patrimonio from "./pages/Patrimonio";
 import Relatorios from "./pages/Relatorios";
 import Familia from "./pages/Familia";
 import Educacao from "./pages/Educacao";
@@ -47,6 +49,16 @@ const App = () => (
             <Route path="/transacoes" element={
               <ProtectedRoute>
                 <Transacoes />
+              </ProtectedRoute>
+            } />
+            <Route path="/transacoes-ai" element={
+              <ProtectedRoute requireSubscription>
+                <TransacoesAI />
+              </ProtectedRoute>
+            } />
+            <Route path="/patrimonio" element={
+              <ProtectedRoute>
+                <Patrimonio />
               </ProtectedRoute>
             } />
             <Route path="/relatorios" element={
