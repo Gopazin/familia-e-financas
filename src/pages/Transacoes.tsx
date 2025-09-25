@@ -21,7 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { TransactionList } from '@/components/transactions/TransactionList';
 import { QuickTransactionForm } from '@/components/transactions/QuickTransactionForm';
 import { CategoryManager } from '@/components/transactions/CategoryManager';
-import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Lightbulb, List, Settings, Zap } from 'lucide-react';
+import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Lightbulb, List, Settings, Zap, Bot, Mic, Camera, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -100,11 +100,52 @@ const Transacoes = () => {
                 Controle completo das suas finanças
               </p>
             </div>
-            <div className="w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              {isPremiumFeature() && (
+                <Button 
+                  onClick={() => window.location.href = '/transacoes-ai'}
+                  className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                  size="lg"
+                >
+                  <Sparkles className="h-5 w-5" />
+                  <span className="hidden sm:inline">Assistente IA</span>
+                  <span className="sm:hidden">IA</span>
+                </Button>
+              )}
               <QuickTransactionForm />
             </div>
           </div>
         </div>
+
+        {/* AI Integration Banner for Premium Users */}
+        {isPremiumFeature() && (
+          <Card className="mb-6 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border-purple-200 dark:border-purple-800">
+            <CardContent className="pt-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg">
+                    <Bot className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground mb-1">Assistente IA Financeiro</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Registre transações por voz, texto ou foto. Deixe a IA organizar suas finanças!
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <Button 
+                    onClick={() => window.location.href = '/transacoes-ai'}
+                    className="gap-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 flex-1 sm:flex-none"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                    Usar IA
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Tabs defaultValue="transactions" className="space-y-4">
           <TabsList className="grid w-full grid-cols-3 h-auto">
@@ -115,8 +156,8 @@ const Transacoes = () => {
             </TabsTrigger>
             <TabsTrigger value="form" className="gap-2 text-xs sm:text-sm py-2 sm:py-3">
               <PlusCircle className="h-3 w-3 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Formulário Completo</span>
-              <span className="sm:hidden">Novo</span>
+              <span className="hidden sm:inline">Formulário Manual</span>
+              <span className="sm:hidden">Manual</span>
             </TabsTrigger>
             <TabsTrigger value="categories" className="gap-2 text-xs sm:text-sm py-2 sm:py-3">
               <Settings className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -192,10 +233,29 @@ const Transacoes = () => {
               <div className="lg:col-span-2">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <PlusCircle className="h-6 w-6" />
-                      Nova Transação
+                    <CardTitle className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <PlusCircle className="h-6 w-6" />
+                        Formulário Manual
+                      </div>
+                      {isPremiumFeature() && (
+                        <Button 
+                          onClick={() => window.location.href = '/transacoes-ai'}
+                          variant="outline" 
+                          size="sm" 
+                          className="gap-2 text-purple-600 border-purple-200 hover:bg-purple-50"
+                        >
+                          <Bot className="h-4 w-4" />
+                          Usar IA
+                        </Button>
+                      )}
                     </CardTitle>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      {isPremiumFeature() 
+                        ? "Formulário tradicional para quando preferir inserir dados manualmente ou quando a IA estiver indisponível."
+                        : "Registre suas transações usando o formulário completo abaixo."
+                      }
+                    </p>
                   </CardHeader>
                   <CardContent className="space-y-6">
                     {/* Transaction Type Selection */}
@@ -343,20 +403,53 @@ const Transacoes = () => {
                   </CardContent>
                 </Card>
 
-                {/* Tip of the Day */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Lightbulb className="h-5 w-5" />
-                      Dica do Dia
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">
-                      💡 Use o lançamento rápido para registrar gastos na hora. Depois pode editar diretamente na lista para adicionar mais detalhes.
-                    </p>
-                  </CardContent>
-                </Card>
+                {/* AI Features or Tips */}
+                {isPremiumFeature() ? (
+                  <Card className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-950/30 dark:to-pink-950/30 border-purple-200 dark:border-purple-800">
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Sparkles className="h-5 w-5 text-purple-600" />
+                        Funcionalidades IA
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <Mic className="h-4 w-4 text-purple-600" />
+                        <span>Comando por voz</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Camera className="h-4 w-4 text-purple-600" />
+                        <span>Foto de recibos</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <Bot className="h-4 w-4 text-purple-600" />
+                        <span>Processamento inteligente</span>
+                      </div>
+                      <Button 
+                        onClick={() => window.location.href = '/transacoes-ai'}
+                        className="w-full mt-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                        size="sm"
+                      >
+                        <Sparkles className="h-4 w-4 mr-2" />
+                        Experimentar IA
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2">
+                        <Lightbulb className="h-5 w-5" />
+                        Dica do Dia
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-sm text-muted-foreground">
+                        💡 Use o lançamento rápido para registrar gastos na hora. Depois pode editar diretamente na lista para adicionar mais detalhes.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
               </div>
             </div>
           </TabsContent>

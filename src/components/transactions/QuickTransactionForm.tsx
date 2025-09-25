@@ -15,7 +15,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { useTransactions, TransactionType } from '@/hooks/useTransactions';
 import { useCategories } from '@/hooks/useCategories';
 import { useFamilyMembers } from '@/hooks/useFamilyMembers';
-import { Plus, Zap, TrendingUp, TrendingDown } from 'lucide-react';
+import { Plus, Zap, TrendingUp, TrendingDown, Bot, Sparkles } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface QuickFormData {
   type: TransactionType;
@@ -30,6 +31,7 @@ export const QuickTransactionForm = () => {
   const { createTransaction, loading } = useTransactions();
   const { categories, getCategoriesByType, getFavoriteCategories } = useCategories();
   const { familyMembers } = useFamilyMembers();
+  const { isSubscribed, subscriptionPlan } = useAuth();
   
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState<QuickFormData>({
@@ -79,21 +81,47 @@ export const QuickTransactionForm = () => {
     cat.type === formData.type || cat.type === 'both'
   );
 
+  const isPremiumUser = () => {
+    return isSubscribed && (subscriptionPlan === 'premium' || subscriptionPlan === 'family');
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="gap-2" size="lg">
+        <Button variant="outline" className="gap-2" size="lg">
           <Plus className="h-5 w-5" />
-          Lançamento Rápido
+          <span className="hidden sm:inline">Lançamento Manual</span>
+          <span className="sm:hidden">Manual</span>
         </Button>
       </DialogTrigger>
       
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Zap className="h-5 w-5" />
-            Novo Lançamento
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Plus className="h-5 w-5" />
+              Lançamento Manual
+            </div>
+            {isPremiumUser() && (
+              <Button 
+                onClick={() => {
+                  setIsOpen(false);
+                  window.location.href = '/transacoes-ai';
+                }}
+                variant="outline" 
+                size="sm" 
+                className="gap-2 text-purple-600 border-purple-200 hover:bg-purple-50"
+              >
+                <Sparkles className="h-4 w-4" />
+                Usar IA
+              </Button>
+            )}
           </DialogTitle>
+          {isPremiumUser() && (
+            <p className="text-sm text-muted-foreground">
+              Prefere usar a IA? Ela pode processar comandos de voz, texto natural e fotos automaticamente.
+            </p>
+          )}
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-6">
