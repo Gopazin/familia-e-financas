@@ -345,6 +345,10 @@ export type Database = {
           total_liabilities: number
         }[]
       }
+      create_default_categories: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       get_user_roles: {
         Args: { target_user_id: string }
         Returns: {
