@@ -4,6 +4,7 @@ import RecentTransactions from "@/components/dashboard/RecentTransactions";
 import SpendingChart from "@/components/dashboard/SpendingChart";
 import AIInsights from "@/components/dashboard/AIInsights";
 import AdminAccessButton from "@/components/admin/AdminAccessButton";
+import { AIAssistantCard } from "@/components/ai/AIAssistantCard";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -80,8 +81,11 @@ const Index = () => {
           {/* Financial Summary Cards */}
           <FinancialSummary />
 
-          {/* AI Insights */}
-          <AIInsights />
+          {/* AI Assistant & Insights Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <AIAssistantCard />
+            <AIInsights />
+          </div>
 
           {/* Quick Actions */}
           <Card className="p-6">

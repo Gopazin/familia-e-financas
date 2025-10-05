@@ -2,12 +2,15 @@ import React from 'react';
 import Navigation from '@/components/navigation/Navigation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { AITransactionChat } from '@/components/ai/AITransactionChat';
 import { useAuth } from '@/contexts/AuthContext';
-import { Bot, Sparkles, Mic, Camera, MessageSquare, Crown } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bot, Sparkles, Mic, Camera, MessageSquare, Crown, ArrowLeft, Lock } from 'lucide-react';
 
 const TransacoesAI = () => {
   const { user, isSubscribed, subscriptionPlan } = useAuth();
+  const navigate = useNavigate();
   
   const isPremiumUser = () => {
     return isSubscribed && (subscriptionPlan === 'premium' || subscriptionPlan === 'family');
@@ -17,14 +20,27 @@ const TransacoesAI = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-6 max-w-7xl lg:ml-64">
+      <div className="container mx-auto px-4 py-6 max-w-6xl lg:ml-64">
+        {/* Header simplificado */}
         <div className="mb-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(-1)}
+            className="mb-4 gap-2"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Voltar
+          </Button>
+          
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-12 h-12 rounded-full bg-gradient-prosperity flex items-center justify-center">
+              <Bot className="h-6 w-6 text-white" />
+            </div>
             <div>
-              <div className="flex items-center gap-3 mb-2">
-                <Bot className="h-8 w-8 text-primary" />
-                <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-                  Assistente IA Financeiro
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-bold text-foreground">
+                  Assistente IA Completo
                 </h1>
                 {isPremiumUser() && (
                   <Badge variant="default" className="gap-1">
@@ -33,131 +49,129 @@ const TransacoesAI = () => {
                   </Badge>
                 )}
               </div>
-              <p className="text-sm sm:text-base text-muted-foreground">
+              <p className="text-sm text-muted-foreground">
                 {isPremiumUser() 
-                  ? "Registre suas transações usando inteligência artificial"
-                  : "Funcionalidade disponível para assinantes Premium/Family"
+                  ? "Registre transações por voz, texto ou foto"
+                  : "Assine Premium para desbloquear todos os recursos"
                 }
               </p>
             </div>
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Main Chat Area */}
-          <div className="lg:col-span-2">
-            <AITransactionChat />
-          </div>
+        {isPremiumUser() ? (
+          <div className="grid lg:grid-cols-4 gap-6">
+            {/* Chat principal - 3 colunas */}
+            <div className="lg:col-span-3">
+              <AITransactionChat />
+            </div>
 
-          {/* Sidebar with Features and Tips */}
-          <div className="space-y-6">
-            {/* Features Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Sparkles className="h-5 w-5 text-primary" />
-                  Funcionalidades IA
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start gap-3">
-                  <MessageSquare className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Chat Inteligente</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Fale naturalmente sobre suas finanças
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Mic className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">Reconhecimento de Voz</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Grave mensagens de áudio
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <Camera className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
-                  <div>
-                    <h4 className="font-medium">OCR de Notas Fiscais</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Envie fotos de comprovantes
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Usage Examples */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Exemplos de Uso</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-sm font-medium mb-1">💬 Texto</p>
-                  <p className="text-xs text-muted-foreground">
-                    "Gastei 45 reais no Uber hoje"
-                  </p>
-                </div>
-
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-sm font-medium mb-1">🎤 Áudio</p>
-                  <p className="text-xs text-muted-foreground">
-                    Grave: "Almoço no restaurante, 35 reais"
-                  </p>
-                </div>
-
-                <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-sm font-medium mb-1">📸 Imagem</p>
-                  <p className="text-xs text-muted-foreground">
-                    Foto da nota fiscal ou comprovante
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* WhatsApp Integration */}
-            {isPremiumUser() && (
+            {/* Sidebar compacta - 1 coluna */}
+            <div className="space-y-4">
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">WhatsApp Bot</CardTitle>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    Recursos
+                  </CardTitle>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Registre transações diretamente pelo WhatsApp!
-                  </p>
-                  <div className="p-3 bg-green-50 rounded-lg border border-green-200">
-                    <p className="text-sm font-medium text-green-800">
-                      📱 Número: (11) 9999-9999
-                    </p>
-                    <p className="text-xs text-green-600 mt-1">
-                      Vincule seu número nas configurações
-                    </p>
+                <CardContent className="space-y-3 text-sm">
+                  <div className="flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4 text-primary" />
+                    <span>Chat inteligente</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Mic className="h-4 w-4 text-primary" />
+                    <span>Voz e áudio</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Camera className="h-4 w-4 text-primary" />
+                    <span>OCR de notas</span>
                   </div>
                 </CardContent>
               </Card>
-            )}
 
-            {/* Tips Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Dicas Importantes</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-muted-foreground">
-                <p>• Seja específico com valores e categorias</p>
-                <p>• Mencione datas quando relevante</p>
-                <p>• Fotos devem ter boa qualidade e legibilidade</p>
-                <p>• Confirme sempre as sugestões antes de salvar</p>
-                <p>• Use o formulário manual como backup</p>
-              </CardContent>
-            </Card>
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Exemplos</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-xs">
+                  <div className="p-2 bg-muted rounded">
+                    <p className="font-medium mb-1">💬 Texto</p>
+                    <p className="text-muted-foreground">"Gastei R$ 45 no Uber"</p>
+                  </div>
+                  <div className="p-2 bg-muted rounded">
+                    <p className="font-medium mb-1">🎤 Voz</p>
+                    <p className="text-muted-foreground">"Almoço R$ 35"</p>
+                  </div>
+                  <div className="p-2 bg-muted rounded">
+                    <p className="font-medium mb-1">📸 Foto</p>
+                    <p className="text-muted-foreground">Nota fiscal/recibo</p>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm">Dicas</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-1 text-xs text-muted-foreground">
+                  <p>• Seja específico</p>
+                  <p>• Mencione valores</p>
+                  <p>• Confirme sugestões</p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
-        </div>
+        ) : (
+          <Card className="max-w-2xl mx-auto">
+            <CardContent className="pt-12 pb-12 text-center space-y-6">
+              <div className="w-20 h-20 mx-auto rounded-full bg-gradient-prosperity flex items-center justify-center">
+                <Lock className="w-10 h-10 text-white" />
+              </div>
+              
+              <div>
+                <h2 className="text-2xl font-bold mb-2">Recurso Premium</h2>
+                <p className="text-muted-foreground max-w-md mx-auto">
+                  O Assistente IA completo está disponível apenas para assinantes Premium e Family
+                </p>
+              </div>
+
+              <div className="grid gap-3 max-w-sm mx-auto text-left">
+                <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                  <MessageSquare className="h-5 w-5 text-primary flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-sm">Chat Inteligente</p>
+                    <p className="text-xs text-muted-foreground">Fale naturalmente</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                  <Mic className="h-5 w-5 text-primary flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-sm">Reconhecimento de Voz</p>
+                    <p className="text-xs text-muted-foreground">Grave áudios</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
+                  <Camera className="h-5 w-5 text-primary flex-shrink-0" />
+                  <div>
+                    <p className="font-medium text-sm">OCR de Notas</p>
+                    <p className="text-xs text-muted-foreground">Fotos de recibos</p>
+                  </div>
+                </div>
+              </div>
+
+              <Button 
+                onClick={() => navigate('/pricing')}
+                size="lg"
+                className="gap-2 bg-gradient-prosperity hover:opacity-90"
+              >
+                <Crown className="w-5 h-5" />
+                Assinar Premium Agora
+              </Button>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );
