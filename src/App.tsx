@@ -9,9 +9,7 @@ import AdminProtectedRoute from "@/components/auth/AdminProtectedRoute";
 import AdminLayout from "@/layouts/AdminLayout";
 import GlobalVoiceAssistant from "@/components/voice/GlobalVoiceAssistant";
 import Index from "./pages/Index";
-import Transacoes from "./pages/Transacoes";
-import TransacoesAI from "./pages/TransacoesAI";
-import Patrimonio from "./pages/Patrimonio";
+import GestaoFinanceira from "./pages/GestaoFinanceira";
 import Relatorios from "./pages/Relatorios";
 import Familia from "./pages/Familia";
 import Educacao from "./pages/Educacao";
@@ -48,19 +46,25 @@ const App = () => (
                 <Index />
               </ProtectedRoute>
             } />
+            <Route path="/gestao-financeira" element={
+              <ProtectedRoute requireSubscription>
+                <GestaoFinanceira />
+              </ProtectedRoute>
+            } />
+            {/* Redirect old routes to new unified page */}
             <Route path="/transacoes" element={
               <ProtectedRoute>
-                <Transacoes />
+                <GestaoFinanceira />
               </ProtectedRoute>
             } />
             <Route path="/transacoes-ai" element={
-              <ProtectedRoute requireSubscription>
-                <TransacoesAI />
+              <ProtectedRoute>
+                <GestaoFinanceira />
               </ProtectedRoute>
             } />
             <Route path="/patrimonio" element={
               <ProtectedRoute>
-                <Patrimonio />
+                <GestaoFinanceira />
               </ProtectedRoute>
             } />
             <Route path="/relatorios" element={

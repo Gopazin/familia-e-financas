@@ -433,6 +433,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_settings: {
+        Row: {
+          assistant_name: string | null
+          created_at: string
+          family_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assistant_name?: string | null
+          created_at?: string
+          family_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assistant_name?: string | null
+          created_at?: string
+          family_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

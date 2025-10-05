@@ -197,7 +197,7 @@ export const AIAssistantCard = () => {
             size="icon"
             variant="outline"
             disabled={loading}
-            onClick={() => navigate('/transacoes-ai')}
+            onClick={() => navigate('/gestao-financeira')}
           >
             <Mic className="w-4 h-4" />
           </Button>
@@ -205,7 +205,7 @@ export const AIAssistantCard = () => {
             size="icon"
             variant="outline"
             disabled={loading}
-            onClick={() => navigate('/transacoes-ai')}
+            onClick={() => navigate('/gestao-financeira')}
           >
             <Camera className="w-4 h-4" />
           </Button>
@@ -218,7 +218,7 @@ export const AIAssistantCard = () => {
           </Button>
         </div>
         <p className="text-xs text-center text-muted-foreground">
-          Para mais recursos, acesse a <button onClick={() => navigate('/transacoes-ai')} className="text-primary hover:underline">página completa do assistente</button>
+          Para mais recursos, acesse a <button onClick={() => navigate('/gestao-financeira')} className="text-primary hover:underline">página completa do assistente</button>
         </p>
       </CardContent>
     </Card>
