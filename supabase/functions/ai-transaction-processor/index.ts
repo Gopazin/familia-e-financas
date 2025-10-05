@@ -13,6 +13,7 @@ interface TransactionRequest {
   user_id: string;
   confirm_suggestion?: boolean;
   suggestion?: any;
+  conversation_history?: Array<{ role: string; content: string }>;
 }
 
 interface TransactionSuggestion {
@@ -36,10 +37,16 @@ serve(async (req) => {
       type, 
       user_id, 
       confirm_suggestion, 
-      suggestion 
+      suggestion,
+      conversation_history = []
     }: TransactionRequest = await req.json();
 
-    console.log('AI Transaction Processor - Request:', { type, user_id, confirm_suggestion });
+    console.log('AI Transaction Processor - Request:', { 
+      type, 
+      user_id, 
+      confirm_suggestion,
+      conversation_messages: conversation_history.length 
+    });
 
     // Initialize Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -171,25 +178,18 @@ serve(async (req) => {
     const categoryList = categories?.map(cat => `${cat.name} (${cat.type})`).join(', ') || 
       'Alimentação, Transporte, Moradia, Saúde, Lazer, Salário, Freelance';
 
-    // Process with GPT-4 to extract transaction information
-    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          {
-            role: 'system',
-            content: `Você é um assistente financeiro especializado em processar transações.
-            
+    // Build messages array with conversation history
+    const messages = [
+      {
+        role: 'system',
+        content: `Você é um assistente financeiro especializado em processar transações.
+        
 SUAS RESPONSABILIDADES:
 1. Analisar texto sobre transações financeiras em português brasileiro
 2. Extrair informações estruturadas (tipo, valor, categoria, descrição, data)
 3. Responder de forma amigável e confirmar o entendimento
 4. Sugerir transações quando há informações suficientes
+5. Manter contexto da conversa para responder perguntas de acompanhamento
 
 CATEGORIAS DISPONÍVEIS: ${categoryList}
 
@@ -197,6 +197,7 @@ FORMATO DE RESPOSTA:
 - Se conseguir identificar uma transação clara: responda em JSON structured output
 - Se precisar de esclarecimentos: faça perguntas específicas
 - Sempre seja amigável e natural
+- Use o contexto da conversa anterior para entender melhor o usuário
 
 EXEMPLOS DE ENTRADA:
 "Gastei 45 reais no Uber" → Despesa R$ 45,00, Categoria: Transporte
@@ -222,12 +223,28 @@ Se NÃO conseguir identificar uma transação, responda:
   "has_transaction": false,
   "response": "mensagem pedindo esclarecimentos ou cumprimento"
 }`
-          },
-          {
-            role: 'user',
-            content: processedInput
-          }
-        ],
+      },
+      // Add conversation history (limit to last 10 messages to avoid token limits)
+      ...conversation_history.slice(-10).map(msg => ({
+        role: msg.role,
+        content: msg.content
+      })),
+      {
+        role: 'user',
+        content: processedInput
+      }
+    ];
+
+    // Process with GPT-4 to extract transaction information
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: messages,
         max_completion_tokens: 500,
         response_format: { type: "json_object" }
       }),

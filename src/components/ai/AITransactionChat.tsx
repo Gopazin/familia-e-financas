@@ -85,11 +85,18 @@ export const AITransactionChat = () => {
     setIsLoading(true);
     
     try {
+      // Prepare conversation history for context
+      const conversationHistory = messages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }));
+
       const { data, error } = await supabase.functions.invoke('ai-transaction-processor', {
         body: {
           input: userInput,
           type: inputType,
-          user_id: user?.id
+          user_id: user?.id,
+          conversation_history: conversationHistory
         }
       });
 
