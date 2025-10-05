@@ -74,5 +74,8 @@ verify_jwt = true
 [functions.dashboard-insights]
 verify_jwt = true
 
+[functions.voice-command-router]
+verify_jwt = true
+
 [functions.whatsapp-webhook]
 verify_jwt = false

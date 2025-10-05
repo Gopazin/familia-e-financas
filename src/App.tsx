@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import AdminProtectedRoute from "@/components/auth/AdminProtectedRoute";
 import AdminLayout from "@/layouts/AdminLayout";
+import GlobalVoiceAssistant from "@/components/voice/GlobalVoiceAssistant";
 import Index from "./pages/Index";
 import Transacoes from "./pages/Transacoes";
 import TransacoesAI from "./pages/TransacoesAI";
@@ -36,6 +37,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
+          <GlobalVoiceAssistant />
           <Routes>
             <Route path="/auth" element={<Auth />} />
             <Route path="/reset-password" element={<ResetPassword />} />
