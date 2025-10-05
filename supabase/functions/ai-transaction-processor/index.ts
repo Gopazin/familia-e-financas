@@ -78,35 +78,58 @@ serve(async (req) => {
       );
     }
 
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY');
-    if (!lovableApiKey) {
-      throw new Error('Lovable API key not configured');
+    const openAIKey = Deno.env.get('OPENAI_API_KEY');
+    if (!openAIKey) {
+      throw new Error('OpenAI API key not configured');
     }
 
     let processedInput = input;
 
     // Process different input types
     if (type === 'audio') {
-      console.log('Audio input not supported - Gemini does not support audio transcription');
-      return new Response(
-        JSON.stringify({
-          success: false,
-          response: 'Desculpe, a transcrição de áudio não está disponível no momento. Por favor, digite sua mensagem ou envie uma imagem.'
-        }),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-
-    } else if (type === 'image') {
-      console.log('Processing image input with Gemini Vision');
-      // Process image with Gemini 2.5 Pro (supports vision)
-      const imageAnalysisResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+      console.log('Processing audio input');
+      // Convert audio to text using Whisper
+      const audioResponse = await fetch('https://api.openai.com/v1/audio/transcriptions', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${lovableApiKey}`,
+          'Authorization': `Bearer ${openAIKey}`,
+        },
+        body: (() => {
+          const formData = new FormData();
+          // Convert base64 to blob
+          const base64Data = input.split(',')[1];
+          const binaryData = atob(base64Data);
+          const bytes = new Uint8Array(binaryData.length);
+          for (let i = 0; i < binaryData.length; i++) {
+            bytes[i] = binaryData.charCodeAt(i);
+          }
+          const audioBlob = new Blob([bytes], { type: 'audio/wav' });
+          formData.append('file', audioBlob, 'audio.wav');
+          formData.append('model', 'whisper-1');
+          formData.append('language', 'pt');
+          return formData;
+        })(),
+      });
+
+      if (!audioResponse.ok) {
+        throw new Error('Failed to transcribe audio');
+      }
+
+      const audioResult = await audioResponse.json();
+      processedInput = audioResult.text;
+      console.log('Audio transcription:', processedInput);
+
+    } else if (type === 'image') {
+      console.log('Processing image input');
+      // Process image with GPT-4 Vision for OCR
+      const imageAnalysisResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-pro',
+          model: 'gpt-4o',
           messages: [
             {
               role: 'system',
@@ -125,14 +148,13 @@ serve(async (req) => {
                 }
               ]
             }
-          ]
+          ],
+          max_tokens: 500
         }),
       });
 
       if (!imageAnalysisResponse.ok) {
-        const errorText = await imageAnalysisResponse.text();
-        console.error('Gemini Vision API Error:', errorText);
-        throw new Error('Failed to analyze image with Gemini');
+        throw new Error('Failed to analyze image');
       }
 
       const imageResult = await imageAnalysisResponse.json();
@@ -149,15 +171,15 @@ serve(async (req) => {
     const categoryList = categories?.map(cat => `${cat.name} (${cat.type})`).join(', ') || 
       'Alimentação, Transporte, Moradia, Saúde, Lazer, Salário, Freelance';
 
-    // Process with Gemini Flash to extract transaction information
-    const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+    // Process with GPT-4 to extract transaction information
+    const aiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${lovableApiKey}`,
+        'Authorization': `Bearer ${openAIKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
@@ -206,14 +228,15 @@ Se NÃO conseguir identificar uma transação, responda:
             content: processedInput
           }
         ],
+        max_completion_tokens: 500,
         response_format: { type: "json_object" }
       }),
     });
 
     if (!aiResponse.ok) {
       const error = await aiResponse.text();
-      console.error('Lovable AI / Gemini API Error:', error);
-      throw new Error(`Lovable AI error: ${error}`);
+      console.error('OpenAI API Error:', error);
+      throw new Error(`OpenAI API error: ${error}`);
     }
 
     const aiResult = await aiResponse.json();
