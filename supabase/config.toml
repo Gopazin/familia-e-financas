@@ -80,5 +80,8 @@ verify_jwt = true
 [functions.data-curator]
 verify_jwt = true
 
+[functions.report-generator]
+verify_jwt = true
+
 [functions.whatsapp-webhook]
 verify_jwt = false
