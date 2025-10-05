@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import Navigation from "@/components/navigation/Navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,6 +6,9 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Settings, 
   Palette,
@@ -16,10 +20,67 @@ import {
   Trash2,
   Moon,
   Sun,
-  Globe
+  Globe,
+  Bot
 } from "lucide-react";
 
 const Configuracoes = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [assistantName, setAssistantName] = useState('');
+  const [familyName, setFamilyName] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (!user) return;
+      
+      const { data } = await supabase
+        .from('user_settings')
+        .select('assistant_name, family_name')
+        .eq('user_id', user.id)
+        .single();
+      
+      if (data) {
+        setAssistantName(data.assistant_name || '');
+        setFamilyName(data.family_name || '');
+      }
+    };
+    
+    loadSettings();
+  }, [user]);
+
+  const handleSaveAssistantSettings = async () => {
+    if (!user) return;
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase
+        .from('user_settings')
+        .upsert({
+          user_id: user.id,
+          assistant_name: assistantName || null,
+          family_name: familyName || null,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Configurações salvas",
+        description: "O nome do assistente foi atualizado com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as configurações.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const configSections = [
     {
       icon: Palette,
@@ -65,6 +126,55 @@ const Configuracoes = () => {
 
           {/* Configuration Sections */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Assistant Settings */}
+            <Card className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-full bg-gradient-prosperity flex items-center justify-center">
+                  <Bot className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-lg">Assistente IA</h3>
+                  <p className="text-sm text-muted-foreground">Personalize seu assistente</p>
+                </div>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="family-name">Nome da Família</Label>
+                  <Input 
+                    id="family-name"
+                    placeholder="ex: Silva"
+                    value={familyName}
+                    onChange={(e) => setFamilyName(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    O assistente será chamado de "Assistente da Família {familyName || '[Sobrenome]'}"
+                  </p>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="assistant-name">Nome Personalizado (opcional)</Label>
+                  <Input 
+                    id="assistant-name"
+                    placeholder="ex: Assistente Financeiro"
+                    value={assistantName}
+                    onChange={(e) => setAssistantName(e.target.value)}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Deixe em branco para usar o nome padrão baseado na família
+                  </p>
+                </div>
+
+                <Button 
+                  onClick={handleSaveAssistantSettings}
+                  disabled={loading}
+                  className="w-full"
+                >
+                  {loading ? 'Salvando...' : 'Salvar Configurações'}
+                </Button>
+              </div>
+            </Card>
+
             {/* Appearance Settings */}
             <Card className="p-6">
               <div className="flex items-center gap-3 mb-6">

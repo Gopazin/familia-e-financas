@@ -19,7 +19,7 @@ const Index = () => {
   const { user, isSubscribed, subscriptionPlan } = useAuth();
 
   const handleNewTransaction = () => {
-    navigate("/transacoes");
+    navigate("/gestao-financeira");
   };
 
   const handleViewReports = () => {
@@ -29,9 +29,9 @@ const Index = () => {
   const handleQuickAction = (action: string) => {
     toast({
       title: `${action} selecionada`,
-      description: "Você será redirecionado para a página de transações.",
+      description: "Você será redirecionado para a gestão financeira.",
     });
-    setTimeout(() => navigate("/transacoes"), 1000);
+    setTimeout(() => navigate("/gestao-financeira"), 1000);
   };
 
   return (
