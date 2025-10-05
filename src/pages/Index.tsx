@@ -2,6 +2,7 @@ import Navigation from "@/components/navigation/Navigation";
 import FinancialSummary from "@/components/dashboard/FinancialSummary";
 import RecentTransactions from "@/components/dashboard/RecentTransactions";
 import SpendingChart from "@/components/dashboard/SpendingChart";
+import AIInsights from "@/components/dashboard/AIInsights";
 import AdminAccessButton from "@/components/admin/AdminAccessButton";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -78,6 +79,9 @@ const Index = () => {
 
           {/* Financial Summary Cards */}
           <FinancialSummary />
+
+          {/* AI Insights */}
+          <AIInsights />
 
           {/* Quick Actions */}
           <Card className="p-6">
