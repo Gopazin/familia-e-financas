@@ -55,7 +55,7 @@ const Navigation = () => {
 
   const navigationItems = [
     { href: "/", icon: Home, label: "Dashboard", color: "text-primary" },
-    { href: "/gestao-financeira", icon: TrendingUp, label: "Gestão Financeira", color: "text-prosperity", premium: true },
+    { href: "/assistente-financeiro", icon: TrendingUp, label: "Assistente Financeiro", color: "text-prosperity", premium: true },
     { href: "/relatorios", icon: BarChart3, label: "Relatórios", color: "text-success", premium: true },
     { href: "/familia", icon: Users, label: "Família", color: "text-accent", premium: true },
     { href: "/educacao", icon: GraduationCap, label: "Educação", color: "text-warning" },

@@ -13,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { Bot, Crown, Lock, Wallet, TrendingUp, List, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
-const GestaoFinanceira = () => {
+const AssistenteFinanceiro = () => {
   const { user, isSubscribed, subscriptionPlan } = useAuth();
   const navigate = useNavigate();
   const [assistantName, setAssistantName] = useState('Assistente Financeiro');
@@ -51,7 +51,8 @@ const GestaoFinanceira = () => {
     <div className="min-h-screen bg-background">
       <Navigation />
       
-      <div className="container mx-auto px-4 py-6 max-w-7xl lg:ml-64">
+      <div className="lg:ml-64">
+        <div className="container mx-auto px-4 py-6 max-w-7xl">
         {/* Header minimalista */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
@@ -72,7 +73,7 @@ const GestaoFinanceira = () => {
               </div>
               <p className="text-sm text-muted-foreground">
                 {isPremiumUser() 
-                  ? "Seu assistente pessoal para gestão financeira completa"
+                  ? "Registre transações conversando naturalmente com seu assistente"
                   : "Assine Premium para desbloquear o assistente completo"
                 }
               </p>
@@ -163,9 +164,10 @@ const GestaoFinanceira = () => {
             </CardContent>
           </Card>
         )}
+        </div>
       </div>
     </div>
   );
 };
 
-export default GestaoFinanceira;
+export default AssistenteFinanceiro;
