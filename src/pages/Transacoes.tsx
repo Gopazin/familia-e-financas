@@ -21,6 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { TransactionList } from '@/components/transactions/TransactionList';
 import { QuickTransactionForm } from '@/components/transactions/QuickTransactionForm';
 import { CategoryManager } from '@/components/transactions/CategoryManager';
+import SuggestionsReview from '@/components/transactions/SuggestionsReview';
 import { PlusCircle, TrendingUp, TrendingDown, DollarSign, Lightbulb, List, Settings, Zap, Bot, Mic, Camera, Sparkles } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -223,6 +224,8 @@ const Transacoes = () => {
                 </CardContent>
               </Card>
             </div>
+
+            <SuggestionsReview />
 
             <TransactionList />
           </TabsContent>

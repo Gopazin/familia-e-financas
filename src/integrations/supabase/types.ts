@@ -275,39 +275,137 @@ export type Database = {
         }
         Relationships: []
       }
+      transaction_patterns: {
+        Row: {
+          confidence_score: number | null
+          created_at: string | null
+          id: string
+          last_used_at: string | null
+          pattern_key: string
+          pattern_type: string
+          pattern_value: Json
+          updated_at: string | null
+          usage_count: number | null
+          user_id: string
+        }
+        Insert: {
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          pattern_key: string
+          pattern_type: string
+          pattern_value: Json
+          updated_at?: string | null
+          usage_count?: number | null
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number | null
+          created_at?: string | null
+          id?: string
+          last_used_at?: string | null
+          pattern_key?: string
+          pattern_type?: string
+          pattern_value?: Json
+          updated_at?: string | null
+          usage_count?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transaction_suggestions: {
+        Row: {
+          confidence_score: number
+          created_at: string | null
+          id: string
+          original_value: string | null
+          reviewed_at: string | null
+          status: string | null
+          suggested_value: Json
+          suggestion_type: string
+          transaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          confidence_score: number
+          created_at?: string | null
+          id?: string
+          original_value?: string | null
+          reviewed_at?: string | null
+          status?: string | null
+          suggested_value: Json
+          suggestion_type: string
+          transaction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          confidence_score?: number
+          created_at?: string | null
+          id?: string
+          original_value?: string | null
+          reviewed_at?: string | null
+          status?: string | null
+          suggested_value?: Json
+          suggestion_type?: string
+          transaction_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_suggestions_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       transactions: {
         Row: {
           amount: number
+          auto_categorized: boolean | null
           category: string | null
           created_at: string
           date: string
           description: string
           family_member_id: string | null
           id: string
+          is_recurring: boolean | null
+          metadata: Json | null
+          recurrence_pattern: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at: string
           user_id: string
         }
         Insert: {
           amount: number
+          auto_categorized?: boolean | null
           category?: string | null
           created_at?: string
           date?: string
           description: string
           family_member_id?: string | null
           id?: string
+          is_recurring?: boolean | null
+          metadata?: Json | null
+          recurrence_pattern?: string | null
           type: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
           user_id: string
         }
         Update: {
           amount?: number
+          auto_categorized?: boolean | null
           category?: string | null
           created_at?: string
           date?: string
           description?: string
           family_member_id?: string | null
           id?: string
+          is_recurring?: boolean | null
+          metadata?: Json | null
+          recurrence_pattern?: string | null
           type?: Database["public"]["Enums"]["transaction_type"]
           updated_at?: string
           user_id?: string
