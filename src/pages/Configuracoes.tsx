@@ -35,11 +35,11 @@ const Configuracoes = () => {
     const loadSettings = async () => {
       if (!user) return;
       
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('user_settings')
         .select('assistant_name, family_name')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       if (data) {
         setAssistantName(data.assistant_name || '');
@@ -55,7 +55,7 @@ const Configuracoes = () => {
     
     setLoading(true);
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_settings')
         .upsert({
           user_id: user.id,

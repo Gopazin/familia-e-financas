@@ -28,11 +28,11 @@ const GestaoFinanceira = () => {
     const loadSettings = async () => {
       if (!user) return;
       
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from('user_settings')
         .select('assistant_name, family_name')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
       
       if (data) {
         if (data.assistant_name) {
